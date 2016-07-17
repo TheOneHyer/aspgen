@@ -8,7 +8,7 @@ from __future__ import print_function
 """
 
 import argparse
-import math
+from math import log
 import os
 from pkg_resources import resource_stream
 import random
@@ -19,8 +19,9 @@ __author__ = 'Alex Hyer'
 __email__ = 'theonehyer@gmail.com'
 __license__ = 'GPLv3'
 __maintainer__ = 'Alex Hyer'
+__credits__ = 'Generic Human'
 __status__ = 'Alpha'
-__version__ = '0.0.3'
+__version__ = '0.0.1a4'
 
 
 def basic_stats(password, verbose=False):
@@ -65,7 +66,7 @@ def basic_stats(password, verbose=False):
         possible_chars += len(special_chars)
 
     combinations = possible_chars ** len(password)
-    entropy = math.log(combinations, 2)
+    entropy = log(combinations, 2)
 
     return combinations, entropy
 
@@ -83,9 +84,66 @@ def dict_stats(words, dict_words):
     """
 
     combinations = dict_words ** words
-    entropy = math.log(combinations, 2)
+    entropy = log(combinations, 2)
 
     return combinations, entropy
+
+
+# Credit: Generic Human on StackOverflow: http://stackoverflow.com/questions/
+# 8870261/how-to-split-text-without-spaces-into-list-of-words
+# I modified the code for readability and minor speed improvements
+def infer_spaces(string, words):
+    """Infer space locations in a string without spaces
+
+    Args:
+        string (str): string to infer spaces of
+
+        words (list): list of str containing all possible words
+
+    Returns:
+        list: list of words in string
+    """
+
+    def best_match(i):
+        """Find best match for first i characters in string
+
+        This function makes numerous naughty assumptions about nonlocal
+        variables that only work/are made because this function is inside
+        another function.
+
+        Args:
+            i (int): position of current letter in string
+
+        Returns:
+            int, int: cost and length of match
+        """
+
+        candidates = enumerate(reversed(cost[max(0, i - max_length):i]))
+        return min((c + word_cost.get(string[i - l - 1:i], 9e999), l + 1)
+                   for l, c in candidates)
+
+    # Build cost dict assuming Zipf's law and cost = -math.log(probability)
+    words_len = len(words)
+    word_cost = dict((word, log((i + 1) * log(words_len)))
+                     for i, word in enumerate(words))
+    max_length = max(len(i) for i in words)
+
+    # Build the cost array
+    cost = [0]
+    for i in range(1, len(string) + 1):
+        c, l = best_match(i)
+        cost.append(c)
+
+    # Backtrack to recover the minimal-cost string
+    out = []
+    i = len(string)
+    while i > 0:
+        c, l = best_match(i)
+        assert c == cost[i]  # Throw error if values don't match last iter
+        out.append(string[i - l:i])
+        i -= l
+
+    return [i for i in reversed(out)]
 
 
 def password_characters(all=True, lower_letters=False, upper_letters=False,
@@ -196,16 +254,16 @@ def main(args):
                     if args.min_length <= len(word) <= args.max_length:
                         pass_list.append(word)
 
+        pass_len = len(pass_list)
         password_words = []
         for i in range(0, args.length):
-            random_number = random.SystemRandom().randint(0, len(pass_list)-1)
+            random_number = random.SystemRandom().randint(0, pass_list - 1)
             password_words.append(pass_list[random_number])
         output('Words in Password: {0}'.format(' '.join(password_words)))
         output('Password: {0}'.format(''.join(password_words)))
 
         if args.stats:
-            combinations, entropy = dict_stats(len(password_words),
-                                               len(pass_list))
+            combinations, entropy = dict_stats(len(password_words), pass_len)
             output('Password Combinations: {0}'.format(combinations))
             output('Password Entropy: {0}'.format(entropy))
 
