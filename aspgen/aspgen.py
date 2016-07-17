@@ -10,6 +10,7 @@ from __future__ import print_function
 import argparse
 import math
 import os
+from pkg_resources import resource_stream
 import random
 import sys
 from textwrap import wrap
@@ -19,17 +20,26 @@ __email__ = 'theonehyer@gmail.com'
 __license__ = 'GPLv3'
 __maintainer__ = 'Alex Hyer'
 __status__ = 'Alpha'
-__version__ = '0.0.2'
+__version__ = '0.0.3'
 
 
-def basic_stats(password):
-    """Produce basic stats on a password
+def basic_stats(password, verbose=False):
+    """Detects password composition and produces basic stats
 
     Args:
         password (str): password to analyze
 
+        verbose (bool): If True, outputs progress messages
+
     Returns:
         int, float: number of password combinations and entropy of password
+
+    Example:
+        >>> combinations, entropy = basic_stats('password')
+        >>> print(combinations)
+        208827064576
+        >>> print(entropy)
+        37.6035177451
     """
 
     # Get character sets
@@ -42,13 +52,37 @@ def basic_stats(password):
 
     # Detect characters and combine sets
     if len(pass_set.intersection(lower_letters)) != 0:
+        if verbose:
+            output('Detected lowercase letters in password')
         possible_chars += len(lower_letters)
     if len(pass_set.intersection(upper_letters)) != 0:
+        if verbose:
+            output('Detected uppercase letters in password')
         possible_chars += len(upper_letters)
     if len(pass_set.intersection(special_chars)) != 0:
+        if verbose:
+            output('Detected special characters in password')
         possible_chars += len(special_chars)
 
     combinations = possible_chars ** len(password)
+    entropy = math.log(combinations, 2)
+
+    return combinations, entropy
+
+
+def dict_stats(words, dict_words):
+    """Performs simple calculations for dictionary passwords
+
+    Args:
+        words (int): number of words in password
+
+        dict_words (int): number of words in dictionary password was made from
+
+    Returns:
+        int, float: number of password combinations and entropy of password
+    """
+
+    combinations = dict_words ** words
     entropy = math.log(combinations, 2)
 
     return combinations, entropy
@@ -108,9 +142,6 @@ def output(message, width=79):
         a long line
     """
 
-    # Represent brackets literally
-    message = message.replace('{', '{{')
-    message = message.replace('}', '}}')
     print('{0}'.join(wrap(message, width)).format(os.linesep))
 
 
@@ -136,12 +167,47 @@ def main(args):
         for i in range(0, args.length):
             password.append(chars[random.SystemRandom().randint(0, max_char)])
         password = ''.join(password)
+        password = password.replace('{', '{{')
+        password = password.replace('}', '}}')
         output('Password: {0}'.format(password))
 
         if args.stats:
             combinations, entropy = basic_stats(password)
             output('Password Combinations: {0}'.format(combinations))
-            print('Password Entropy: {0}'.format(entropy))
+            output('Password Entropy: {0}'.format(entropy))
+
+    if args.tool == 'dict_generator':
+
+        # Raise error if lengths would produce zero words to choose from
+        if args.max_length < args.min_length:
+            raise ValueError('Max word length is less than min word length')
+
+        pass_list = []
+        if args.uncommon:
+            with resource_stream('aspgen', 'words.txt') as in_handle:
+                for word in in_handle:
+                    word = word.strip()
+                    if args.min_length <= len(word) <= args.max_length:
+                        pass_list.append(word)
+        else:
+            with resource_stream('aspgen', 'common_words.txt') as in_handle:
+                for word in in_handle:
+                    word = word.strip()
+                    if args.min_length <= len(word) <= args.max_length:
+                        pass_list.append(word)
+
+        password_words = []
+        for i in range(0, args.length):
+            random_number = random.SystemRandom().randint(0, len(pass_list)-1)
+            password_words.append(pass_list[random_number])
+        output('Words in Password: {0}'.format(' '.join(password_words)))
+        output('Password: {0}'.format(''.join(password_words)))
+
+        if args.stats:
+            combinations, entropy = dict_stats(len(password_words),
+                                               len(pass_list))
+            output('Password Combinations: {0}'.format(combinations))
+            output('Password Entropy: {0}'.format(entropy))
 
     if args.tool == 'analyzer':
         print('Tool not ready yet')
@@ -154,17 +220,38 @@ if __name__ == '__main__':
                                      RawDescriptionHelpFormatter)
     subparsers = parser.add_subparsers(title='Tools',
                                        dest='tool')
+
     analyzer = subparsers.add_parser('analyzer',
                                      help='Analyze a given password')
+
+    dict_generator = subparsers.add_parser('dict_generator',
+                                           help='Securely generate a '
+                                                'dictionary-based password')
+    dict_generator.add_argument('-l', '--length',
+                                default=6,
+                                type=int,
+                                help='number of words to construct password')
+    dict_generator.add_argument('-m', '--min_length',
+                                default=5,
+                                type=int,
+                                help='minimum length word to use in password')
+    dict_generator.add_argument('-t', '--stats',
+                                action='store_true',
+                                help='print basic stats on password')
+    dict_generator.add_argument('-u', '--uncommon',
+                                action='store_true',
+                                help='permit uncommon words in password')
+    dict_generator.add_argument('-x', '--max_length',
+                                default=999,
+                                type=int,
+                                help='maximum length word to use in password')
+
     generator = subparsers.add_parser('generator',
                                       help='Securely generate a password')
     generator.add_argument('-a', '--all',
                            default=True,
                            action='store_true',
                            help='permit all characters in password [Default]')
-    generator.add_argument('-d', '--dictionary',
-                           action='store_true',
-                           help='generate dictionary based password')
     generator.add_argument('-l', '--length',
                            default=12,
                            type=int,
