@@ -71,19 +71,39 @@ def basic_stats(password, verbose=False):
     return combinations, entropy
 
 
-def dict_stats(words, dict_words):
-    """Performs simple calculations for dictionary passwords
+def dict_stats(password, dict_words, verbose=False, safe=False):
+    """Analyzes dictionary password and returns statistics
 
     Args:
-        words (int): number of words in password
+        password (str): dictionary password to analyze
 
-        dict_words (int): number of words in dictionary password was made from
+        dict_words (list): list of words password may come from
+
+        verbose (bool): If True, output progress messages
+
+        safe (bool): If True, output found words in password, sets verbose True
 
     Returns:
         int, float: number of password combinations and entropy of password
+
+    Example:
+        >>> from pkg_resources import resource_string
+        >>> dict_words = resource_string('aspgen', 'common_words.txt').split()
+        >>> combinations, entropy = dict_stats('thecatinthehat', dict_words)
+        >>> combinations
+        # TODO: Add value
+        >>> entropy
+        # TODO: Add value
     """
 
-    combinations = dict_words ** words
+    words = infer_spaces(password, dict_words)
+    if safe:
+        verbose = True
+    if verbose:
+        output('{0} words found in password'.format(str(len(words))))
+    if safe:
+        output('Words Found: {0}'.format(' '.join(words)))
+    combinations = len(words) ** len(dict_words)
     entropy = log(combinations, 2)
 
     return combinations, entropy
@@ -240,30 +260,31 @@ def main(args):
         if args.max_length < args.min_length:
             raise ValueError('Max word length is less than min word length')
 
-        pass_list = []
+        dict_words = []
         if args.uncommon:
             with resource_stream('aspgen', 'words.txt') as in_handle:
                 for word in in_handle:
                     word = word.strip()
                     if args.min_length <= len(word) <= args.max_length:
-                        pass_list.append(word)
+                        dict_words.append(word)
         else:
             with resource_stream('aspgen', 'common_words.txt') as in_handle:
                 for word in in_handle:
                     word = word.strip()
                     if args.min_length <= len(word) <= args.max_length:
-                        pass_list.append(word)
+                        dict_words.append(word)
 
-        pass_len = len(pass_list)
+        dict_len = len(dict_words)
         password_words = []
         for i in range(0, args.length):
-            random_number = random.SystemRandom().randint(0, pass_list - 1)
-            password_words.append(pass_list[random_number])
+            random_number = random.SystemRandom().randint(0, dict_len - 1)
+            password_words.append(dict_words[random_number])
+        password = ''.join(password_words)
         output('Words in Password: {0}'.format(' '.join(password_words)))
-        output('Password: {0}'.format(''.join(password_words)))
+        output('Password: {0}'.format(password))
 
         if args.stats:
-            combinations, entropy = dict_stats(len(password_words), pass_len)
+            combinations, entropy = dict_stats(password, dict_words)
             output('Password Combinations: {0}'.format(combinations))
             output('Password Entropy: {0}'.format(entropy))
 
