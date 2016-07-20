@@ -9,6 +9,7 @@ from __future__ import print_function
 
 import argparse
 from decimal import Decimal
+from getpass import getpass
 from math import log
 import os
 from pkg_resources import resource_stream, resource_string
@@ -314,15 +315,17 @@ def main(args):
             print_stats(combinations, entropy)
 
     if args.tool == 'analyzer' and not args.dictionary:
-        combinations, entropy = basic_stats(args.password, verbose=True)
+        password = getpass()
+        combinations, entropy = basic_stats(password, verbose=True)
         print_stats(combinations, entropy)
 
     if args.tool == 'analyzer' and args.dictionary:
+        password = getpass()
         dict_words = resource_string('aspgen', 'common_words.txt').split()
-        words = infer_spaces(args.password, dict_words)
+        words = infer_spaces(password, dict_words)
         output('Password appears to consist of {0} words'.format(
             str(len(words))))
-        combinations, entropy = dict_stats(args.password, dict_words)
+        combinations, entropy = dict_stats(password, dict_words)
         print_stats(combinations, entropy)
 
 
@@ -338,9 +341,9 @@ if __name__ == '__main__':
     analyzer.add_argument('-d', '--dictionary',
                           action='store_true',
                           help='password is dictionary-based')
-    analyzer.add_argument('password',
-                          type=str,
-                          help='password to analyze')
+    analyzer.add_argument('-t', '--detailed',
+                          action='store_true',
+                          help='produce detailed password stats')
 
     dict_generator = subparsers.add_parser('dict_generator',
                                            help='Securely generate a '
@@ -348,7 +351,7 @@ if __name__ == '__main__':
     dict_generator.add_argument('-l', '--length',
                                 default=6,
                                 type=int,
-                                help='number of words to construct password')
+                                help='number of words in password')
     dict_generator.add_argument('-m', '--min_length',
                                 default=5,
                                 type=int,
