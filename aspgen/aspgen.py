@@ -90,11 +90,11 @@ def dict_stats(password, dict_words, verbose=False, safe=False):
     Example:
         >>> from pkg_resources import resource_string
         >>> dict_words = resource_string('aspgen', 'common_words.txt').split()
-        >>> combinations, entropy = dict_stats('thecatinthehat', dict_words)
+        >>> combinations, entropy = dict_stats('the', dict_words)
         >>> combinations
-        # TODO: Add value
+        1
         >>> entropy
-        # TODO: Add value
+        0.0
     """
 
     words = infer_spaces(password, dict_words)
@@ -123,6 +123,12 @@ def infer_spaces(string, words):
 
     Returns:
         list: list of words in string
+
+    Example:
+        >>> from pkg_resources import resource_string
+        >>> dict_words = resource_string('aspgen', 'common_words.txt').split()
+        >>> infer_spaces('thecatinthehat', dict_words)
+        ['the', 'cat', 'in', 'the', 'hat']
     """
 
     def best_match(i):
@@ -233,6 +239,11 @@ def print_stats(combinations, entropy):
         combinations (int): number of combinations of password
 
         entropy (float): entropy of password
+
+    Example:
+        >>> print_stats(10000, 97.235)
+        Passwords Combinations: 1.00e+4
+        Password Entropy: 97.24
     """
 
     output('Password Combinations: {0:.2e}'.format(Decimal(combinations)))
