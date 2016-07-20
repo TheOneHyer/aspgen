@@ -10,7 +10,7 @@ from __future__ import print_function
 import argparse
 from math import log
 import os
-from pkg_resources import resource_stream
+from pkg_resources import resource_stream, resource_string
 import random
 import sys
 from textwrap import wrap
@@ -288,9 +288,16 @@ def main(args):
             output('Password Combinations: {0}'.format(combinations))
             output('Password Entropy: {0}'.format(entropy))
 
-    if args.tool == 'analyzer':
-        print('Tool not ready yet')
-        sys.exit(1)
+    if args.tool == 'analyzer' and not args.dictionary:
+        combinations, entropy = basic_stats(args.password, verbose=True)
+        output('Password Combinations: {0}'.format(combinations))
+        output('Password Entropy: {0}'.format(entropy))
+
+    if args.tool == 'analyzer' and args.dictionary:
+        dict_words = resource_string('aspgen', 'common_words.txt')
+        combinations, entropy = dict_stats(args.password, dict_words)
+        output('Password Combinations: {0}'.format(combinations))
+        output('Password Entropy: {0}'.format(entropy))
 
 
 if __name__ == '__main__':
@@ -302,6 +309,12 @@ if __name__ == '__main__':
 
     analyzer = subparsers.add_parser('analyzer',
                                      help='Analyze a given password')
+    analyzer.add_argument('-d', '--dictionary',
+                          action='store_true',
+                          help='password is dictionary-based')
+    analyzer.add_argument('password',
+                          type=str,
+                          help='password to analyze')
 
     dict_generator = subparsers.add_parser('dict_generator',
                                            help='Securely generate a '
