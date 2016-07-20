@@ -12,8 +12,10 @@ from decimal import Decimal
 from getpass import getpass
 from math import log
 import os
-from pkg_resources import resource_stream, resource_string
+from pkg_resources import resource_stream
+# TODO: Add prettytable
 import random
+# TODO: Add SecureString
 import sys
 from textwrap import wrap
 
@@ -83,8 +85,6 @@ def dict_stats(password, dict_words, verbose=False, safe=False):
 
         verbose (bool): If True, output progress messages
 
-        safe (bool): If True, output found words in password, sets verbose True
-
     Returns:
         int, float: number of password combinations and entropy of password
 
@@ -99,12 +99,8 @@ def dict_stats(password, dict_words, verbose=False, safe=False):
     """
 
     words = infer_spaces(password, dict_words)
-    if safe:
-        verbose = True
     if verbose:
         output('{0} words found in password'.format(str(len(words))))
-    if safe:
-        output('Words Found: {0}'.format(' '.join(words)))
     combinations = len(words) ** len(dict_words)
     entropy = log(combinations, 2)
 
@@ -263,16 +259,17 @@ def main(args):
         if args.lower_letters or args.upper_letters or args.special_characters:
             args.all = False
 
-        password = []
         chars = password_characters(all=args.all,
                                     lower_letters=args.lower_letters,
                                     upper_letters=args.upper_letters,
                                     special_chars=args.special_characters)
         max_char = len(chars) - 1
 
+        pass_char = []
         for i in range(0, args.length):
-            password.append(chars[random.SystemRandom().randint(0, max_char)])
-        password = ''.join(password)
+            pass_char.append(chars[random.SystemRandom().randint(0, max_char)])
+        password = ''.join(pass_char)
+        # TODO: clearmem pass_char
         password = password.replace('{', '{{')
         password = password.replace('}', '}}')
         output('Password: {0}'.format(password))
@@ -281,7 +278,9 @@ def main(args):
             combinations, entropy = basic_stats(password)
             print_stats(combinations, entropy)
 
-    if args.tool == 'dict_generator':
+        # TODO: clearmem password
+
+    elif args.tool == 'dict_generator':
 
         # Raise error if lengths would produce zero words to choose from
         if args.max_length < args.min_length:
@@ -302,30 +301,49 @@ def main(args):
                         dict_words.append(word)
 
         dict_len = len(dict_words)
-        password_words = []
+        words = []
         for i in range(0, args.length):
             random_number = random.SystemRandom().randint(0, dict_len - 1)
-            password_words.append(dict_words[random_number])
-        password = ''.join(password_words)
-        output('Words in Password: {0}'.format(' '.join(password_words)))
+            words.append(dict_words[random_number])
+        password = ''.join(words)
+        output('Words in Password: {0}'.format(' '.join(words)))
+        # TODO: clearmem words
         output('Password: {0}'.format(password))
 
         if args.stats:
             combinations, entropy = dict_stats(password, dict_words)
             print_stats(combinations, entropy)
 
-    if args.tool == 'analyzer' and not args.dictionary:
+        # TODO: clearmem password
+
+    elif args.tool == 'analyzer':
         password = getpass()
         combinations, entropy = basic_stats(password, verbose=True)
+        # TODO: clearmem password
         print_stats(combinations, entropy)
 
-    if args.tool == 'analyzer' and args.dictionary:
+    elif args.tool == 'dict_analyzer':
+
+        # Raise error if lengths would produce zero words to choose from
+        if args.max_length < args.min_length:
+            raise ValueError('Max word length is less than min word length')
+
+        dict_words = []
+        with resource_stream('aspgen', 'common_words.txt') as in_handle:
+            for word in in_handle:
+                word = word.strip()
+                if args.min_length <= len(word) <= args.max_length:
+                    dict_words.append(word)
+
         password = getpass()
-        dict_words = resource_string('aspgen', 'common_words.txt').split()
         words = infer_spaces(password, dict_words)
         output('Password appears to consist of {0} words'.format(
             str(len(words))))
+        if args.safe:
+            output('Words Found: {0}'.format(' '.join(words)))
+        # TODO: clearmem words
         combinations, entropy = dict_stats(password, dict_words)
+        # TODO: clearmem password
         print_stats(combinations, entropy)
 
 
@@ -338,12 +356,29 @@ if __name__ == '__main__':
 
     analyzer = subparsers.add_parser('analyzer',
                                      help='Analyze a given password')
-    analyzer.add_argument('-d', '--dictionary',
-                          action='store_true',
-                          help='password is dictionary-based')
     analyzer.add_argument('-t', '--detailed',
                           action='store_true',
                           help='produce detailed password stats')
+
+    dict_analyzer = subparsers.add_parser('dict_analyzer',
+                                          help='Analyze a dictionary-based '
+                                               'password')
+    dict_analyzer.add_argument('-m', '--min_length',
+                               default=5,
+                               type=int,
+                               help='minimum length word to use in password')
+    dict_analyzer.add_argument('-s', '--safe',
+                               action='store_true',
+                               help='display words found in password, others '
+                                    'can see password and aspgen can\'t '
+                                    'delete the password from terminal memory')
+    dict_analyzer.add_argument('-t', '--detailed',
+                               action='store_true',
+                               help='produce detailed password stats')
+    dict_analyzer.add_argument('-x', '--max_length',
+                               default=999,
+                               type=int,
+                               help='maximum length word to use in password')
 
     dict_generator = subparsers.add_parser('dict_generator',
                                            help='Securely generate a '
