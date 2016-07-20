@@ -8,6 +8,7 @@ from __future__ import print_function
 """
 
 import argparse
+from decimal import Decimal
 from math import log
 import os
 from pkg_resources import resource_stream, resource_string
@@ -223,6 +224,21 @@ def output(message, width=79):
     print('{0}'.join(wrap(message, width)).format(os.linesep))
 
 
+def print_stats(combinations, entropy):
+    """Convenience wrapper to print basic password stats
+
+    Print formatted combination and entropy of password
+
+    Args:
+        combinations (int): number of combinations of password
+
+        entropy (float): entropy of password
+    """
+
+    output('Password Combinations: {0:.2e}'.format(Decimal(combinations)))
+    output('Password Entropy: {0:.2f}'.format(entropy))
+
+
 def main(args):
     """Main function for aspgen
 
@@ -251,8 +267,7 @@ def main(args):
 
         if args.stats:
             combinations, entropy = basic_stats(password)
-            output('Password Combinations: {0}'.format(combinations))
-            output('Password Entropy: {0}'.format(entropy))
+            print_stats(combinations, entropy)
 
     if args.tool == 'dict_generator':
 
@@ -285,19 +300,19 @@ def main(args):
 
         if args.stats:
             combinations, entropy = dict_stats(password, dict_words)
-            output('Password Combinations: {0}'.format(combinations))
-            output('Password Entropy: {0}'.format(entropy))
+            print_stats(combinations, entropy)
 
     if args.tool == 'analyzer' and not args.dictionary:
         combinations, entropy = basic_stats(args.password, verbose=True)
-        output('Password Combinations: {0}'.format(combinations))
-        output('Password Entropy: {0}'.format(entropy))
+        print_stats(combinations, entropy)
 
     if args.tool == 'analyzer' and args.dictionary:
-        dict_words = resource_string('aspgen', 'common_words.txt')
+        dict_words = resource_string('aspgen', 'common_words.txt').split()
+        words = infer_spaces(args.password, dict_words)
+        output('Password appears to consist of {0} words'.format(
+            str(len(words))))
         combinations, entropy = dict_stats(args.password, dict_words)
-        output('Password Combinations: {0}'.format(combinations))
-        output('Password Entropy: {0}'.format(entropy))
+        print_stats(combinations, entropy)
 
 
 if __name__ == '__main__':
