@@ -75,7 +75,7 @@ def basic_stats(password, verbose=False):
     return combinations, entropy
 
 
-def dict_stats(password, dict_words, verbose=False, safe=False):
+def dict_stats(password, dict_words, verbose=False):
     """Analyzes dictionary password and returns statistics
 
     Args:
@@ -270,6 +270,7 @@ def main(args):
             pass_char.append(chars[random.SystemRandom().randint(0, max_char)])
         password = ''.join(pass_char)
         # TODO: clearmem pass_char
+        # TODO: figure out why next two lines don't cover all brackets
         password = password.replace('{', '{{')
         password = password.replace('}', '}}')
         output('Password: {0}'.format(password))
@@ -317,12 +318,20 @@ def main(args):
         # TODO: clearmem password
 
     elif args.tool == 'analyzer':
+
+        # TODO: Added cracking speed tables
+        # TODO: Added 'secure for [activity]' output
+
         password = getpass()
         combinations, entropy = basic_stats(password, verbose=True)
         # TODO: clearmem password
         print_stats(combinations, entropy)
 
     elif args.tool == 'dict_analyzer':
+
+        # TODO: Added brute-force vs. dict calculator
+        # TODO: Added cracking speed tables
+        # TODO: Added 'secure for [activity]' output
 
         # Raise error if lengths would produce zero words to choose from
         if args.max_length < args.min_length:
