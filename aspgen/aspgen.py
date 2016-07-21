@@ -75,6 +75,11 @@ def basic_stats(password, verbose=False):
     return combinations, entropy
 
 
+def crack_times(combinations, speeds):
+
+    pass
+
+
 def dict_stats(password, dict_words, verbose=False):
     """Analyzes dictionary password and returns statistics
 
@@ -101,7 +106,7 @@ def dict_stats(password, dict_words, verbose=False):
     words = infer_spaces(password, dict_words)
     if verbose:
         output('{0} words found in password'.format(str(len(words))))
-    combinations = len(words) ** len(dict_words)
+    combinations = len(dict_words) ** len(words)
     entropy = log(combinations, 2)
 
     return combinations, entropy
