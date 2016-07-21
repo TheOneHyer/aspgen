@@ -76,8 +76,25 @@ def basic_stats(password, verbose=False):
 
 
 def crack_times(combinations, speeds):
+    """Calculate average times to crack a password
 
-    pass
+    Assumes password occurs uniformly across all possible combinations such
+    that the probability of a single given password is (1 / combinations).
+
+    Args:
+        combinations (int): possible combinations of password
+
+        speeds (list): list of floats or ints where each item is a rate at
+            which passwords are being guessed
+
+    Returns:
+        list: list of floats where each item is the average time to guess a
+            password at the rate given in speeds
+    """
+
+    times = [float((combinations/2)/time) for time in speeds]
+
+    return times
 
 
 def dict_stats(password, dict_words, verbose=False):
@@ -330,6 +347,11 @@ def main(args):
         combinations, entropy = basic_stats(password, verbose=True)
         # TODO: clearmem password
         print_stats(combinations, entropy)
+        # Cite in docs: 3.5e+8 gizmodo/5966169/the-hardware-hackers-use-to-
+        # crack-your-passwords
+        #  4.0+12 AntMiner S7
+        # 1.0e+14 NSA?
+        crack_speeds = crack_times(combinations, [3.4e+8, 4.0e+12, 1.0e+14])
 
     elif args.tool == 'dict_analyzer':
 
@@ -358,6 +380,7 @@ def main(args):
         combinations, entropy = dict_stats(password, dict_words)
         # TODO: clearmem password
         print_stats(combinations, entropy)
+        crack_speeds = crack_times(combinations, [3.4e+8, 4.0e+12, 1.0e+14])
 
 
 if __name__ == '__main__':
