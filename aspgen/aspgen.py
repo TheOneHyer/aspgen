@@ -224,7 +224,9 @@ def output(message, width=79):
         a long line
     """
 
-    print('{0}'.join(wrap(message, width)).format(os.linesep))
+    # I hate the following syntax, it doesn't feel Pythonic but it works and
+    # format didn't even with double bracket escapes.
+    print('%s' % os.linesep.join(wrap(message, width)))
 
 
 def print_stats(combinations, entropy):
@@ -270,9 +272,6 @@ def main(args):
             pass_char.append(chars[random.SystemRandom().randint(0, max_char)])
         password = ''.join(pass_char)
         # TODO: clearmem pass_char
-        # TODO: figure out why next two lines don't cover all brackets
-        password = password.replace('{', '{{')
-        password = password.replace('}', '}}')
         output('Password: {0}'.format(password))
 
         if args.stats:
