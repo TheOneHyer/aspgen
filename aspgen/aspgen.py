@@ -1,6 +1,8 @@
 #! /usr/bin/env python
 
+from __future__ import division
 from __future__ import print_function
+from __future__ import with_statement
 
 """A Secure Password GENerator
 
@@ -11,13 +13,11 @@ import argparse
 from decimal import Decimal
 from getpass import getpass
 from math import log
-import os
 from pkg_resources import resource_stream
-# TODO: Add prettytable
+import prettytable
 import random
-# TODO: Add SecureString
+from SecureString import clearmem
 import sys
-from textwrap import wrap
 
 __author__ = 'Alex Hyer'
 __email__ = 'theonehyer@gmail.com'
@@ -25,7 +25,7 @@ __license__ = 'GPLv3'
 __maintainer__ = 'Alex Hyer'
 __credits__ = 'Generic Human'
 __status__ = 'Alpha'
-__version__ = '0.0.1a4'
+__version__ = '0.0.1a5'
 
 
 def basic_stats(password, verbose=False):
@@ -34,7 +34,7 @@ def basic_stats(password, verbose=False):
     Args:
         password (str): password to analyze
 
-        verbose (bool): If True, outputs progress messages
+        verbose (bool): If True, prints progress messages
 
     Returns:
         int, float: number of password combinations and entropy of password
@@ -58,15 +58,15 @@ def basic_stats(password, verbose=False):
     # Detect characters and combine sets
     if len(pass_set.intersection(lower_letters)) != 0:
         if verbose:
-            output('Detected lowercase letters in password')
+            print('Detected lowercase letters in password')
         possible_chars += len(lower_letters)
     if len(pass_set.intersection(upper_letters)) != 0:
         if verbose:
-            output('Detected uppercase letters in password')
+            print('Detected uppercase letters in password')
         possible_chars += len(upper_letters)
     if len(pass_set.intersection(special_chars)) != 0:
         if verbose:
-            output('Detected special characters in password')
+            print('Detected special characters in password')
         possible_chars += len(special_chars)
 
     combinations = possible_chars ** len(password)
@@ -105,7 +105,7 @@ def dict_stats(password, dict_words, verbose=False):
 
         dict_words (list): list of words password may come from
 
-        verbose (bool): If True, output progress messages
+        verbose (bool): If True, print progress messages
 
     Returns:
         int, float: number of password combinations and entropy of password
@@ -113,16 +113,15 @@ def dict_stats(password, dict_words, verbose=False):
     Example:
         >>> from pkg_resources import resource_string
         >>> dict_words = resource_string('aspgen', 'common_words.txt').split()
-        >>> combinations, entropy = dict_stats('the', dict_words)
-        >>> combinations
-        1
-        >>> entropy
-        0.0
+        >>> combinations, entropy = dict_stats('thecatinthehat', dict_words)
+        >>> print_stats(combinations, entropy)
+        Password Combinations: 3.20e+21
+        Password Entropy: 71.44
     """
 
     words = infer_spaces(password, dict_words)
     if verbose:
-        output('{0} words found in password'.format(str(len(words))))
+        print('{0} words found in password'.format(str(len(words))))
     combinations = len(dict_words) ** len(words)
     entropy = log(combinations, 2)
 
@@ -233,24 +232,6 @@ def password_characters(all=True, lower_letters=False, upper_letters=False,
     return characters
 
 
-def output(message, width=79):
-    """Convenience wrapper, print message wrapping lines longer than width
-
-    Args:
-        message (str): message to wrap and print
-
-        width (int): max line length
-
-    Example:
-        >>> output('a long line', 79)
-        a long line
-    """
-
-    # I hate the following syntax, it doesn't feel Pythonic but it works and
-    # format didn't even with double bracket escapes.
-    print('%s' % os.linesep.join(wrap(message, width)))
-
-
 def print_stats(combinations, entropy):
     """Convenience wrapper to print basic password stats
 
@@ -267,8 +248,8 @@ def print_stats(combinations, entropy):
         Password Entropy: 97.24
     """
 
-    output('Password Combinations: {0:.2e}'.format(Decimal(combinations)))
-    output('Password Entropy: {0:.2f}'.format(entropy))
+    print('Password Combinations: {0:.2e}'.format(Decimal(combinations)))
+    print('Password Entropy: {0:.2f}'.format(entropy))
 
 
 def main(args):
@@ -289,18 +270,22 @@ def main(args):
                                     special_chars=args.special_characters)
         max_char = len(chars) - 1
 
+        # Construct Password
         pass_char = []
         for i in range(0, args.length):
             pass_char.append(chars[random.SystemRandom().randint(0, max_char)])
         password = ''.join(pass_char)
-        # TODO: clearmem pass_char
-        output('Password: {0}'.format(password))
+
+        # Erase each password character from memory
+        for i in pass_char:
+            clearmem(i)
+        print('Password: {0}'.format(password))
 
         if args.stats:
             combinations, entropy = basic_stats(password)
             print_stats(combinations, entropy)
 
-        # TODO: clearmem password
+        clearmem(password)
 
     elif args.tool == 'dict_generator':
 
@@ -328,9 +313,9 @@ def main(args):
             random_number = random.SystemRandom().randint(0, dict_len - 1)
             words.append(dict_words[random_number])
         password = ''.join(words)
-        output('Words in Password: {0}'.format(' '.join(words)))
+        print('Words in Password: {0}'.format(' '.join(words)))
         # TODO: clearmem words
-        output('Password: {0}'.format(password))
+        print('Password: {0}'.format(password))
 
         if args.stats:
             combinations, entropy = dict_stats(password, dict_words)
@@ -341,7 +326,7 @@ def main(args):
     elif args.tool == 'analyzer':
 
         # TODO: Added cracking speed tables
-        # TODO: Added 'secure for [activity]' output
+        # TODO: Added 'secure for [activity]' print
 
         password = getpass()
         combinations, entropy = basic_stats(password, verbose=True)
@@ -357,7 +342,7 @@ def main(args):
 
         # TODO: Added brute-force vs. dict calculator
         # TODO: Added cracking speed tables
-        # TODO: Added 'secure for [activity]' output
+        # TODO: Added 'secure for [activity]' print
 
         # Raise error if lengths would produce zero words to choose from
         if args.max_length < args.min_length:
@@ -372,10 +357,10 @@ def main(args):
 
         password = getpass()
         words = infer_spaces(password, dict_words)
-        output('Password appears to consist of {0} words'.format(
+        print('Password appears to consist of {0} words'.format(
             str(len(words))))
         if args.safe:
-            output('Words Found: {0}'.format(' '.join(words)))
+            print('Words Found: {0}'.format(' '.join(words)))
         # TODO: clearmem words
         combinations, entropy = dict_stats(password, dict_words)
         # TODO: clearmem password

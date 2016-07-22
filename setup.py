@@ -24,7 +24,7 @@ Copyright:
 from setuptools import setup
 
 setup(name='aspgen',
-      version='0.0.1a3',
+      version='0.0.1a5',
       description='A Secure Password GENerator',
       classifiers=[
           'Development Status :: 1 - Planning',
@@ -33,7 +33,6 @@ setup(name='aspgen',
           'Natural Language :: English',
           'Operating System :: OS Independent',
           'Programming Language :: Python :: 2.7',
-          'Programming Language :: Python :: 3.4',
           'Topic :: Security'
       ],
       keywords='secure password generator',
@@ -49,5 +48,9 @@ setup(name='aspgen',
           'console_scripts': [
               'aspgen = aspgen.aspgen:main'
           ]
-      }
+      },
+      requires=[
+          'prettytable',
+          'SecureString'
+      ]
       )
