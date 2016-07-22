@@ -25,7 +25,7 @@ __license__ = 'GPLv3'
 __maintainer__ = 'Alex Hyer'
 __credits__ = 'Generic Human'
 __status__ = 'Alpha'
-__version__ = '0.0.1a5'
+__version__ = '0.0.1a6'
 
 
 def basic_stats(password, verbose=False):
@@ -279,7 +279,9 @@ def main(args):
         # Erase each password character from memory
         for i in pass_char:
             clearmem(i)
-        print('Password: {0}'.format(password))
+        message = 'Password: {0}'.format(password)
+        print(message)
+        clearmem(message)
 
         if args.stats:
             combinations, entropy = basic_stats(password)
@@ -313,15 +315,21 @@ def main(args):
             random_number = random.SystemRandom().randint(0, dict_len - 1)
             words.append(dict_words[random_number])
         password = ''.join(words)
-        print('Words in Password: {0}'.format(' '.join(words)))
-        # TODO: clearmem words
-        print('Password: {0}'.format(password))
+        message = 'Words in Password: {0}'.format(' '.join(words))
+        print(message)
+        clearmem(message)
+        if args.length > 1:  # clearmem will delete password if one word
+            for word in words:
+                clearmem(word)
+        message = 'Password: {0}'.format(password)
+        print(message)
+        clearmem(message)
 
         if args.stats:
             combinations, entropy = dict_stats(password, dict_words)
             print_stats(combinations, entropy)
 
-        # TODO: clearmem password
+        clearmem(password)
 
     elif args.tool == 'analyzer':
 
@@ -330,7 +338,7 @@ def main(args):
 
         password = getpass()
         combinations, entropy = basic_stats(password, verbose=True)
-        # TODO: clearmem password
+        clearmem(password)
         print_stats(combinations, entropy)
         # Cite in docs: 3.5e+8 gizmodo/5966169/the-hardware-hackers-use-to-
         # crack-your-passwords
@@ -360,10 +368,14 @@ def main(args):
         print('Password appears to consist of {0} words'.format(
             str(len(words))))
         if args.safe:
-            print('Words Found: {0}'.format(' '.join(words)))
-        # TODO: clearmem words
+            message = 'Words Found: {0}'.format(' '.join(words))
+            print(message)
+            clearmem(message)
+        if args.length > 1:  # clearmem will delete password if one word
+            for word in words:
+                clearmem(word)
         combinations, entropy = dict_stats(password, dict_words)
-        # TODO: clearmem password
+        clearmem(password)
         print_stats(combinations, entropy)
         crack_speeds = crack_times(combinations, [3.4e+8, 4.0e+12, 1.0e+14])
 
