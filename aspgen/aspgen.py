@@ -25,7 +25,7 @@ __license__ = 'GPLv3'
 __maintainer__ = 'Alex Hyer'
 __credits__ = 'Generic Human'
 __status__ = 'Alpha'
-__version__ = '0.0.1a6'
+__version__ = '0.0.1a7'
 
 
 def basic_stats(password, verbose=False):
@@ -192,7 +192,7 @@ def infer_spaces(string, words):
 
 
 def password_characters(all=True, lower_letters=False, upper_letters=False,
-                        special_chars=False):
+                        numbers=False, special_chars=False):
     """Create a list of possible characters for a password
 
     Args:
@@ -202,6 +202,8 @@ def password_characters(all=True, lower_letters=False, upper_letters=False,
         lower_letters (bool): add lower-case letters to character list
 
         upper_letters (bool): add upper-case letters to character list
+
+        numbers (bool): add numbers to character list
 
         special_chars (bool): add special characters to character list
 
@@ -222,6 +224,9 @@ def password_characters(all=True, lower_letters=False, upper_letters=False,
 
     if upper_letters or all:
         characters += [chr(char) for char in range(65, 91)]
+
+    if numbers or all:
+        characters += [chr(char) for char in range(48, 58)]
 
     if special_chars or all:
         characters += [chr(char) for char in range(32, 48)]
@@ -267,6 +272,7 @@ def main(args):
         chars = password_characters(all=args.all,
                                     lower_letters=args.lower_letters,
                                     upper_letters=args.upper_letters,
+                                    numbers=args.numbers,
                                     special_chars=args.special_characters)
         max_char = len(chars) - 1
 
@@ -391,7 +397,8 @@ if __name__ == '__main__':
                                      help='Analyze a given password')
     analyzer.add_argument('-t', '--detailed',
                           action='store_true',
-                          help='produce detailed password stats')
+                          help='produce detailed password stats, '
+                               'interpret results with a grain of salt')
 
     dict_analyzer = subparsers.add_parser('dict_analyzer',
                                           help='Analyze a dictionary-based '
@@ -407,7 +414,8 @@ if __name__ == '__main__':
                                     'delete the password from terminal memory')
     dict_analyzer.add_argument('-t', '--detailed',
                                action='store_true',
-                               help='produce detailed password stats')
+                               help='produce detailed password stats, '
+                                    'interpret results with a grain of salt')
     dict_analyzer.add_argument('-x', '--max_length',
                                default=999,
                                type=int,

@@ -24,7 +24,7 @@ Copyright:
 from setuptools import setup
 
 setup(name='aspgen',
-      version='0.0.1a6',
+      version='0.0.1a7',
       description='A Secure Password GENerator',
       classifiers=[
           'Development Status :: 1 - Planning',
