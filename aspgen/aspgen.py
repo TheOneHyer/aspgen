@@ -25,7 +25,7 @@ __license__ = 'GPLv3'
 __maintainer__ = 'Alex Hyer'
 __credits__ = 'Generic Human'
 __status__ = 'Alpha'
-__version__ = '0.0.1a8'
+__version__ = '0.0.1a9'
 
 
 def basic_stats(password, verbose=False):
