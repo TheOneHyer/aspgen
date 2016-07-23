@@ -25,7 +25,7 @@ __license__ = 'GPLv3'
 __maintainer__ = 'Alex Hyer'
 __credits__ = 'Generic Human'
 __status__ = 'Alpha'
-__version__ = '0.0.1a7'
+__version__ = '0.0.1a8'
 
 
 def basic_stats(password, verbose=False):
@@ -268,6 +268,13 @@ def main(args):
 
         if args.lower_letters or args.upper_letters or args.special_characters:
             args.all = False
+
+        if args.alphanumeric:
+            args.all = False
+            args.lower_letters = True
+            args.upper_letters = True
+            args.numbers = True
+            args.special_characters = False
 
         chars = password_characters(all=args.all,
                                     lower_letters=args.lower_letters,
