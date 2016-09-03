@@ -25,7 +25,7 @@ __license__ = 'GPLv3'
 __maintainer__ = 'Alex Hyer'
 __credits__ = 'Generic Human'
 __status__ = 'Alpha'
-__version__ = '0.0.1a10'
+__version__ = '0.0.1a11'
 
 
 def basic_stats(password, verbose=False):
@@ -126,46 +126,58 @@ def dict_stats(password, dict_words, verbose=False):
     return combinations, entropy
 
 
-def generate_password(chars, length, secure=True):
-    """Generate a string by randomly selecting characters from a list
+def generate_password(chars, length, get_parts=False, secure=True):
+    """Generate a string by randomly concatenating strings from a list
 
     Args:
-        chars (list): list of characters to generate password from
+        chars (list): list of str to generate password from
 
         length (int): length of password
 
-        secure (bool): delete characters in character list from memory after
+        get_parts (bool): return strings password is made from, these strings
+                          will not be deleted by secure flag
+
+        secure (bool): delete strings in character list from memory after
                        generating password. WARNING: will yield individual
-                       characters inaccessible, e.g. if one character is 'a'
+                       strings inaccessible, e.g. if one string is 'a'
                        and secure is enabled, the rest of the program
                        calling this function cannot access the char 'a'
                        anymore. Also, the actual password will remain in
                        memory, only chars are deleted.
 
     Returns:
-        str: password
+        tuple: (password (str), parts (list)), password and strings
+               constituting passwords. parts in tuple is None if get_parts
+               flag is False
 
     Example:
         Note: Will not pass docstring test
 
         >>> generate_password(['a', 'b', 'c'], 5)
-        abcba
+        ('abcba', None)
     """
 
     max_char = len(chars) - 1
 
     # Construct Password
-    pass_char = []
+    parts = []
     for i in range(0, length):
-        pass_char.append(chars[random.SystemRandom().randint(0, max_char)])
-    password = ''.join(pass_char)
+        parts.append(chars[random.SystemRandom().randint(0, max_char)])
+    password = ''.join(parts)
 
-    # Erase each password character from memory
+    # Erase each password character from memory if not part of password
     if secure is True:
-        for i in pass_char:
-            clearmem(i)
+        for i in chars:
+            if get_parts is False or i not in parts:
+                # Don't clear only part because it clears password
+                if length == 1 and i in parts:
+                    continue
+                clearmem(i)
 
-    return password
+    if get_parts is False:
+        parts = None
+
+    return password, parts
 
 
 # Credit: Generic Human on StackOverflow: http://stackoverflow.com/questions/
@@ -297,7 +309,7 @@ def print_stats(combinations, entropy):
 
 
 def main(args):
-    """Main function for aspgen
+    """Control program flow based on arguments
 
     Args:
         args (ArgumentParser): argparse ArgumentParser class
@@ -305,7 +317,8 @@ def main(args):
 
     if args.tool == 'generator':
 
-        if args.lower_letters or args.upper_letters or args.special_characters:
+        if args.lower_letters or args.upper_letters or args.special_characters\
+                or args.numbers:
             args.all = False
 
         if args.alphanumeric:
@@ -321,7 +334,7 @@ def main(args):
                                     numbers=args.numbers,
                                     special_chars=args.special_characters)
 
-        password = generate_password(chars, length=args.length)
+        password = generate_password(chars, length=args.length)[0]
 
         message = 'Password: {0}'.format(password)
         print(message)
@@ -353,18 +366,17 @@ def main(args):
                     if args.min_length <= len(word) <= args.max_length:
                         dict_words.append(word)
 
-        dict_len = len(dict_words)
-        words = []
-        for i in range(0, args.length):
-            random_number = random.SystemRandom().randint(0, dict_len - 1)
-            words.append(dict_words[random_number])
-        password = ''.join(words)
+        password, words = generate_password(dict_words, args.length,
+                                            get_parts=True)
+
         message = 'Words in Password: {0}'.format(' '.join(words))
         print(message)
         clearmem(message)
-        if args.length > 1:  # clearmem will delete password if one word
+
+        if args.length > 1:  # clearmem will clear password if one word
             for word in words:
                 clearmem(word)
+
         message = 'Password: {0}'.format(password)
         print(message)
         clearmem(message)
