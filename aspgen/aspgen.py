@@ -14,7 +14,7 @@ from decimal import Decimal
 from getpass import getpass
 from math import log
 from pkg_resources import resource_stream
-import prettytable
+#import prettytable
 import random
 from SecureString import clearmem
 import sys
@@ -25,7 +25,7 @@ __license__ = 'GPLv3'
 __maintainer__ = 'Alex Hyer'
 __credits__ = 'Generic Human'
 __status__ = 'Alpha'
-__version__ = '0.0.1a9'
+__version__ = '0.0.1a10'
 
 
 def basic_stats(password, verbose=False):
@@ -92,9 +92,7 @@ def crack_times(combinations, speeds):
             password at the rate given in speeds
     """
 
-    times = [float((combinations/2)/time) for time in speeds]
-
-    return times
+    return [float((combinations/2)/time) for time in speeds]
 
 
 def dict_stats(password, dict_words, verbose=False):
@@ -126,6 +124,48 @@ def dict_stats(password, dict_words, verbose=False):
     entropy = log(combinations, 2)
 
     return combinations, entropy
+
+
+def generate_password(chars, length, secure=True):
+    """Generate a string by randomly selecting characters from a list
+
+    Args:
+        chars (list): list of characters to generate password from
+
+        length (int): length of password
+
+        secure (bool): delete characters in character list from memory after
+                       generating password. WARNING: will yield individual
+                       characters inaccessible, e.g. if one character is 'a'
+                       and secure is enabled, the rest of the program
+                       calling this function cannot access the char 'a'
+                       anymore. Also, the actual password will remain in
+                       memory, only chars are deleted.
+
+    Returns:
+        str: password
+
+    Example:
+        Note: Will not pass docstring test
+
+        >>> generate_password(['a', 'b', 'c'], 5)
+        abcba
+    """
+
+    max_char = len(chars) - 1
+
+    # Construct Password
+    pass_char = []
+    for i in range(0, length):
+        pass_char.append(chars[random.SystemRandom().randint(0, max_char)])
+    password = ''.join(pass_char)
+
+    # Erase each password character from memory
+    if secure is True:
+        for i in pass_char:
+            clearmem(i)
+
+    return password
 
 
 # Credit: Generic Human on StackOverflow: http://stackoverflow.com/questions/
@@ -245,8 +285,7 @@ def print_stats(combinations, entropy):
     Args:
         combinations (int): number of combinations of password
 
-        entropy (float): entropy of password
-
+        entropy (float): entr
     Example:
         >>> print_stats(10000, 97.235)
         Passwords Combinations: 1.00e+4
@@ -281,17 +320,9 @@ def main(args):
                                     upper_letters=args.upper_letters,
                                     numbers=args.numbers,
                                     special_chars=args.special_characters)
-        max_char = len(chars) - 1
 
-        # Construct Password
-        pass_char = []
-        for i in range(0, args.length):
-            pass_char.append(chars[random.SystemRandom().randint(0, max_char)])
-        password = ''.join(pass_char)
+        password = generate_password(chars, length=args.length)
 
-        # Erase each password character from memory
-        for i in pass_char:
-            clearmem(i)
         message = 'Password: {0}'.format(password)
         print(message)
         clearmem(message)
@@ -355,7 +386,7 @@ def main(args):
         print_stats(combinations, entropy)
         # Cite in docs: 3.5e+8 gizmodo/5966169/the-hardware-hackers-use-to-
         # crack-your-passwords
-        #  4.0+12 AntMiner S7
+        # 4.0+12 AntMiner S7
         # 1.0e+14 NSA?
         crack_speeds = crack_times(combinations, [3.4e+8, 4.0e+12, 1.0e+14])
 
@@ -390,7 +421,6 @@ def main(args):
         combinations, entropy = dict_stats(password, dict_words)
         clearmem(password)
         print_stats(combinations, entropy)
-        crack_speeds = crack_times(combinations, [3.4e+8, 4.0e+12, 1.0e+14])
 
 
 if __name__ == '__main__':
@@ -441,7 +471,7 @@ if __name__ == '__main__':
                                 help='minimum length word to use in password')
     dict_generator.add_argument('-t', '--stats',
                                 action='store_true',
-                                help='print basic stats on password')
+                                help='print stats on password')
     dict_generator.add_argument('-u', '--uncommon',
                                 action='store_true',
                                 help='permit uncommon words in password')
@@ -475,7 +505,7 @@ if __name__ == '__main__':
                            help='permit special characters in password')
     generator.add_argument('-t', '--stats',
                            action='store_true',
-                           help='print basic stats on password')
+                           help='print stats on password')
     generator.add_argument('-u', '--upper_letters',
                            action='store_true',
                            help='permit uppercase letters in password')
