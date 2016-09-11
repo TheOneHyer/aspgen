@@ -25,7 +25,7 @@ __license__ = 'GPLv3'
 __maintainer__ = 'Alex Hyer'
 __credits__ = 'Generic Human'
 __status__ = 'Alpha'
-__version__ = '0.0.1a11'
+__version__ = '0.0.1a12'
 
 
 def basic_stats(password, verbose=False):
@@ -287,6 +287,106 @@ def password_characters(all=True, lower_letters=False, upper_letters=False,
         characters += [chr(char) for char in range(123, 127)]
 
     return characters
+
+
+def password_stats(num_parts, dict_pass=None, dictionary=None,
+                   guess_speeds=None, pass_len=None, secure_verbose=False,
+                   verbose=False):
+    """Analyze various password statistics
+
+    This function aims to calculate various password statistics as safely as
+    possible. This means that it uses as little information as possible to
+    perform statistics, aka attempting to avoid needing the actual password
+    to perform password statistics. As such, this function takes the number
+    of possible characters and length of password rather than the actual
+    password. That being said, some advanced dictionary password statistics
+    require the actual password. If analyzing a dictionary password,
+    the function will attempt to minimize its knowledge of the password during
+    analysis. The minimum knowledge necessary to calculate stats is
+    determined internally to prevent developers from accidentally asking
+    this function to populate memory with more information than necessary.
+    If arguments violate minimum information thresholds, this function raises
+    assertion errors, i.e. aggressively enforces security.
+
+    Important Notes on Functionality:
+
+    1. If pass_len is None and dict_pass is provided, dictionary is
+       required. When these combination of arguments are satisfied,
+       password_stats uses Zipf's Law to tease apart the words in the password
+       and thus determine password length. In order to do this, the dictionary
+       must be sorted from the greatest usage frequency in the given
+       language to lowest word frequency. If a frequency-sorted dictionary is
+       unavailable, this functionality is useless and will provide incorrect
+       results. Note: This functionality is inherently less secure as it
+       provides populates memory with the password's words and should only
+       be used if a program receives a dictionary password from a user. If a
+       program creates the password, provide the number of words as pass_len
+       and length of the dictionary used to generate the password as num_parts
+       to improve security.
+
+    2. If a dictionary password is provided, password_stats compares the
+       entropy of the password as generated from a dictionary versus being
+       generated from individual characters to determine the lowest entropy
+       of the password. This functionality only works with ASCII and will be
+       skipped if using non-ASCII characters; using non-ASCII characters thus
+       eliminates the ability of password_stats to determine the lowest
+       password entropy.
+
+    3. All password statistics assume password consists of concatenated random
+       parts where all random parts have an equal chance of being picked and
+       can be picked multiple times, i.e. parts are uniformly distributed and
+       selected with replacement.
+
+    Args:
+        num_parts (int): number of characters and/or words comprising password
+
+        dict_pass (str): password if dictionary password, else None
+
+        dictionary (list): dictionary used to construct password. Only
+                           permitted and required if pass_len is None and
+                           dict_pass is provided. Must be sorted by relative
+                           frequency of word use in language.
+
+        guess_speeds (list): list of ints representing the guesses/sec a hacker
+                             can perform when attempting to crack the
+                             password, else None. Returns a table.
+
+        pass_len (int): length of password. Always required unless using a
+                        dictionary password where developer wants
+                        password_stats to guess the password length.
+                        Providing pass_len is more secure and accurate than
+                        permitting password_stats to guess length.
+
+        secure_verbose (bool): If True, prints intermediate analysis results.
+                               Will print various information on password to
+                               STDOUT and thus the function loses ability to
+                               guarantee security of password-related data.
+                               Should only be used for debugging, testing, or
+                               if an end-user in a program wishes to see if
+                               password_stats is correctly guessing the words
+                               in their dictionary password.
+
+        verbose (bool): If True, prints progress messages
+
+    Returns:
+        dict: dictionary of password stats. All password stats not calculated
+              have value of None. Dictionary keys are (in YAML format):
+              combinations <int of password combinations>
+              entropy <float of password entropy>
+              combinations_raw <if dict_pass is provided, int of password
+                                combinations if password generated from ASCII
+                                characters>
+              entropy_raw <if dict_pass is provided, float of password
+                           entropy if password generated from ASCII
+                           characters>
+              words <if dict_pass and dictionary provided, list of str
+                     containing words in password>
+              guess_table <if guess_speeds provided, string of
+                           prettytable-formatted table of password guessing
+                           speeds>
+    """
+
+    pass
 
 
 def print_stats(combinations, entropy):
