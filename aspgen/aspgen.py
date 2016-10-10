@@ -25,7 +25,7 @@ __license__ = 'GPLv3'
 __maintainer__ = 'Alex Hyer'
 __credits__ = 'Generic Human'
 __status__ = 'Alpha'
-__version__ = '0.0.1a12'
+__version__ = '0.0.1a13'
 
 
 def basic_stats(password, verbose=False):
@@ -289,9 +289,9 @@ def password_characters(all=True, lower_letters=False, upper_letters=False,
     return characters
 
 
-def password_stats(num_parts, dict_pass=None, dictionary=None,
-                   guess_speeds=None, pass_len=None, secure_verbose=False,
-                   verbose=False):
+def password_stats(dict_pass=None, dictionary=None,
+                   guess_speeds=None, num_parts=None, pass_len=None,
+                   secure_verbose=False, verbose=False):
     """Analyze various password statistics
 
     This function aims to calculate various password statistics as safely as
@@ -310,19 +310,19 @@ def password_stats(num_parts, dict_pass=None, dictionary=None,
 
     Important Notes on Functionality:
 
-    1. If pass_len is None and dict_pass is provided, dictionary is
-       required. When these combination of arguments are satisfied,
-       password_stats uses Zipf's Law to tease apart the words in the password
-       and thus determine password length. In order to do this, the dictionary
-       must be sorted from the greatest usage frequency in the given
-       language to lowest word frequency. If a frequency-sorted dictionary is
-       unavailable, this functionality is useless and will provide incorrect
-       results. Note: This functionality is inherently less secure as it
-       provides populates memory with the password's words and should only
-       be used if a program receives a dictionary password from a user. If a
-       program creates the password, provide the number of words as pass_len
-       and length of the dictionary used to generate the password as num_parts
-       to improve security.
+    1. If num_parts is None, pass_len is None and dict_pass is provided,
+       dictionary is required. When these combination of arguments are
+       satisfied, password_stats uses Zipf's Law to tease apart the words in
+       the password and thus determine password length. In order to do this,
+       the dictionary must be sorted from the greatest usage frequency in
+       the given language to lowest word frequency. If a frequency-sorted
+       dictionary is unavailable, this functionality is useless and will
+       provide incorrect results. Note: This functionality is inherently
+       less secure as it populates memory with the password's components and
+       should only be used if a program receives a dictionary password from
+       a user. If a program creates the password, provide the number of
+       words as pass_len and length of the dictionary used to generate the
+       password as num_parts to improve security.
 
     2. If a dictionary password is provided, password_stats compares the
        entropy of the password as generated from a dictionary versus being
@@ -338,8 +338,6 @@ def password_stats(num_parts, dict_pass=None, dictionary=None,
        selected with replacement.
 
     Args:
-        num_parts (int): number of characters and/or words comprising password
-
         dict_pass (str): password if dictionary password, else None
 
         dictionary (list): dictionary used to construct password. Only
@@ -350,6 +348,9 @@ def password_stats(num_parts, dict_pass=None, dictionary=None,
         guess_speeds (list): list of ints representing the guesses/sec a hacker
                              can perform when attempting to crack the
                              password, else None. Returns a table.
+
+        num_parts (int): number of characters and/or words password may be
+                         comprised from
 
         pass_len (int): length of password. Always required unless using a
                         dictionary password where developer wants
@@ -371,6 +372,7 @@ def password_stats(num_parts, dict_pass=None, dictionary=None,
     Returns:
         dict: dictionary of password stats. All password stats not calculated
               have value of None. Dictionary keys are (in YAML format):
+
               combinations <int of password combinations>
               entropy <float of password entropy>
               combinations_raw <if dict_pass is provided, int of password
@@ -386,7 +388,38 @@ def password_stats(num_parts, dict_pass=None, dictionary=None,
                            speeds>
     """
 
-    pass
+    # Assert only minimum information is given
+    if dict_pass is not None:
+        try:
+            assert dictionary is not None
+        except AssertionError:
+            raise AssertionError('Must assign "dictionary" with "dict_pass"')
+
+    if dictionary is not None:
+        try:
+            assert dict_pass is not None
+        except AssertionError:
+            AssertionError('Must assign "dict_pass" with "dictionary"')
+        try:
+            assert num_parts is None
+        except AssertionError:
+            raise AssertionError('Cannot give "num_parts" with "dictionary"')
+        try:
+            assert pass_len is None
+        except AssertionError:
+            raise AssertionError('Cannot give "pass_len" with "dictionary"')
+
+    if num_parts is not None:
+        try:
+            assert pass_len is not None
+        except AssertionError:
+            raise AssertionError('Must assign "pass_len" with "num_parts"')
+
+    if pass_len is not None:
+        try:
+            assert num_parts is not None
+        except AssertionError:
+            raise AssertionError('Must assign "num_parts" with "pass_len"')
 
 
 def print_stats(combinations, entropy):
