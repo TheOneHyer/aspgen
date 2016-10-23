@@ -14,7 +14,7 @@ from decimal import Decimal
 from getpass import getpass
 from math import log
 from pkg_resources import resource_stream
-#import prettytable
+from prettytable import PrettyTable
 import random
 from SecureString import clearmem
 import sys
@@ -25,7 +25,7 @@ __license__ = 'GPLv3'
 __maintainer__ = 'Alex Hyer'
 __credits__ = 'Generic Human'
 __status__ = 'Alpha'
-__version__ = '0.0.1a16'
+__version__ = '0.0.1a17'
 
 
 def basic_stats(password, verbose=False):
@@ -374,9 +374,8 @@ def password_stats(dict_pass=None, dictionary=None,
                            characters>
               words <if dict_pass and dictionary provided, list of str
                      containing words in password>
-              guess_table <if guess_speeds provided, string of
-                           prettytable-formatted table of password guessing
-                           speeds>
+              guess_table <if guess_speeds provided, PrettyTable of password
+                           guessing speeds>
     """
 
     # Assert only necessary and sufficient information is given
@@ -452,12 +451,13 @@ def password_stats(dict_pass=None, dictionary=None,
             print('Determining characters in password')
 
         # Generate password sets for analysis
-        lower_letters = password_characters(lower_letters=True)
-        upper_letters = password_characters(upper_letters=True)
-        numbers = password_characters(numbers=True)
-        special_chars = password_characters(special_chars=True)
+        lower_letters = password_characters(all=False, lower_letters=True)
+        upper_letters = password_characters(all=False, upper_letters=True)
+        numbers = password_characters(all=False, numbers=True)
+        special_chars = password_characters(all=False, special_chars=True)
         pass_set = set(dict_pass)
 
+        # Detect characters in password
         num_parts = 0
         if len(pass_set.intersection(lower_letters)) != 0:
             if verbose is True:
@@ -476,9 +476,22 @@ def password_stats(dict_pass=None, dictionary=None,
                 print('Detected special characters in password')
             num_parts += len(special_chars)
 
+        if args.verbose:
+            print('Calculating basic stats for dictionary password')
         pass_len = len(dict_pass)
         output['combinations_raw'] = num_parts ** pass_len
         output['entropy_raw'] = log(output['combinations_raw'], 2)
+
+    if calc_crack_table is True:
+        times = [str(float(output['combinations'] / 2) / speed)
+                 for speed in guess_speeds]
+        times.insert(0, 'Time to Guess (sec)')
+        guess_speeds.insert(0, 'Guess Speeds (passwords/sec)')
+        table = PrettyTable(guess_speeds)
+        table.add_row(times)
+        output['guess_table'] = table
+
+    return output
 
 
 def print_stats(combinations, entropy):
