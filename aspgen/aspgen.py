@@ -25,7 +25,7 @@ __license__ = 'GPLv3'
 __maintainer__ = 'Alex Hyer'
 __credits__ = 'Generic Human'
 __status__ = 'Alpha'
-__version__ = '0.0.1a15'
+__version__ = '0.0.1a16'
 
 
 def basic_stats(password, verbose=False):
@@ -412,7 +412,7 @@ def password_stats(dict_pass=None, dictionary=None,
         except AssertionError:
             raise AssertionError('Must assign "num_parts" with "pass_len"')
 
-    output_dict = {
+    output = {
         'combinations': None,
         'entropy': None,
         'combinations_raw': None,
@@ -437,21 +437,48 @@ def password_stats(dict_pass=None, dictionary=None,
     if calc_simple_stats is True:
         if verbose is True:
             print('Calculating basic password stats')
-        output_dict['combinations'] = num_parts ** pass_len
-        output_dict['entropy'] = log(output_dict['combinations'], 2)
+        output['combinations'] = num_parts ** pass_len
+        output['entropy'] = log(output['combinations'], 2)
 
     if calc_dict_stats is True:
         if verbose is True:
             print('Calculating dictionary statistics')
             print('Inferring words comprising password')
-        output_dict['words'] = infer_spaces(dict_pass, dictionary)
+        output['words'] = infer_spaces(dict_pass, dictionary)
+        output['combinations'] = len(dictionary) ** len(output['words'])
+        output['entropy'] = log(output['combinations'], 2)
+
         if verbose is True:
             print('Determining characters in password')
+
+        # Generate password sets for analysis
         lower_letters = password_characters(lower_letters=True)
         upper_letters = password_characters(upper_letters=True)
         numbers = password_characters(numbers=True)
         special_chars = password_characters(special_chars=True)
+        pass_set = set(dict_pass)
 
+        num_parts = 0
+        if len(pass_set.intersection(lower_letters)) != 0:
+            if verbose is True:
+                print('Detected lowercase letters in password')
+            num_parts += len(lower_letters)
+        if len(pass_set.intersection(upper_letters)) != 0:
+            if verbose is True:
+                print('Detected uppercase letters in password')
+            num_parts += len(upper_letters)
+        if len(pass_set.intersection(special_chars)) != 0:
+            if verbose is True:
+                print('Detected numbers in password')
+            num_parts += len(numbers)
+        if len(pass_set.intersection(special_chars)) != 0:
+            if verbose is True:
+                print('Detected special characters in password')
+            num_parts += len(special_chars)
+
+        pass_len = len(dict_pass)
+        output['combinations_raw'] = num_parts ** pass_len
+        output['entropy_raw'] = log(output['combinations_raw'], 2)
 
 
 def print_stats(combinations, entropy):
