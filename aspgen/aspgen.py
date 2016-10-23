@@ -25,7 +25,7 @@ __license__ = 'GPLv3'
 __maintainer__ = 'Alex Hyer'
 __credits__ = 'Generic Human'
 __status__ = 'Alpha'
-__version__ = '0.0.1a13'
+__version__ = '0.0.1a15'
 
 
 def basic_stats(password, verbose=False):
@@ -92,7 +92,7 @@ def crack_times(combinations, speeds):
             password at the rate given in speeds
     """
 
-    return [float((combinations/2)/time) for time in speeds]
+    return [float((combinations / 2) / speed) for speed in speeds]
 
 
 def dict_stats(password, dict_words, verbose=False):
@@ -291,7 +291,7 @@ def password_characters(all=True, lower_letters=False, upper_letters=False,
 
 def password_stats(dict_pass=None, dictionary=None,
                    guess_speeds=None, num_parts=None, pass_len=None,
-                   secure_verbose=False, verbose=False):
+                   verbose=False):
     """Analyze various password statistics
 
     This function aims to calculate various password statistics as safely as
@@ -310,7 +310,7 @@ def password_stats(dict_pass=None, dictionary=None,
 
     Important Notes on Functionality:
 
-    1. If num_parts is None, pass_len is None and dict_pass is provided,
+    1. If num_parts is None, pass_len is None, and dict_pass is provided,
        dictionary is required. When these combination of arguments are
        satisfied, password_stats uses Zipf's Law to tease apart the words in
        the password and thus determine password length. In order to do this,
@@ -358,15 +358,6 @@ def password_stats(dict_pass=None, dictionary=None,
                         Providing pass_len is more secure and accurate than
                         permitting password_stats to guess length.
 
-        secure_verbose (bool): If True, prints intermediate analysis results.
-                               Will print various information on password to
-                               STDOUT and thus the function loses ability to
-                               guarantee security of password-related data.
-                               Should only be used for debugging, testing, or
-                               if an end-user in a program wishes to see if
-                               password_stats is correctly guessing the words
-                               in their dictionary password.
-
         verbose (bool): If True, prints progress messages
 
     Returns:
@@ -388,7 +379,7 @@ def password_stats(dict_pass=None, dictionary=None,
                            speeds>
     """
 
-    # Assert only minimum information is given
+    # Assert only necessary and sufficient information is given
     if dict_pass is not None:
         try:
             assert dictionary is not None
@@ -420,6 +411,47 @@ def password_stats(dict_pass=None, dictionary=None,
             assert num_parts is not None
         except AssertionError:
             raise AssertionError('Must assign "num_parts" with "pass_len"')
+
+    output_dict = {
+        'combinations': None,
+        'entropy': None,
+        'combinations_raw': None,
+        'entropy_raw': None,
+        'words': None,
+        'guess_table': None
+    }
+
+    # Set flags to control function flow
+    calc_simple_stats = False
+    if pass_len is not None and pass_len is not None:
+        calc_simple_stats = True
+
+    calc_dict_stats = False
+    if dict_pass is not None and dictionary is not None:
+        calc_dict_stats = True
+
+    calc_crack_table = False
+    if guess_speeds is not None:
+        calc_crack_table = True
+
+    if calc_simple_stats is True:
+        if verbose is True:
+            print('Calculating basic password stats')
+        output_dict['combinations'] = num_parts ** pass_len
+        output_dict['entropy'] = log(output_dict['combinations'], 2)
+
+    if calc_dict_stats is True:
+        if verbose is True:
+            print('Calculating dictionary statistics')
+            print('Inferring words comprising password')
+        output_dict['words'] = infer_spaces(dict_pass, dictionary)
+        if verbose is True:
+            print('Determining characters in password')
+        lower_letters = password_characters(lower_letters=True)
+        upper_letters = password_characters(upper_letters=True)
+        numbers = password_characters(numbers=True)
+        special_chars = password_characters(special_chars=True)
+
 
 
 def print_stats(combinations, entropy):
