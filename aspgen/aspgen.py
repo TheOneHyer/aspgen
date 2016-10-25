@@ -10,9 +10,10 @@ from __future__ import with_statement
 """
 
 import argparse
-from decimal import Decimal
 from getpass import getpass
+from itertools import izip_longest
 from math import log
+import os
 from pkg_resources import resource_stream
 from prettytable import PrettyTable
 import random
@@ -73,26 +74,6 @@ def basic_stats(password, verbose=False):
     entropy = log(combinations, 2)
 
     return combinations, entropy
-
-
-def crack_times(combinations, speeds):
-    """Calculate average times to crack a password
-
-    Assumes password occurs uniformly across all possible combinations such
-    that the probability of a single given password is (1 / combinations).
-
-    Args:
-        combinations (int): possible combinations of password
-
-        speeds (list): list of floats or ints where each item is a rate at
-            which passwords are being guessed
-
-    Returns:
-        list: list of floats where each item is the average time to guess a
-            password at the rate given in speeds
-    """
-
-    return [float((combinations / 2) / speed) for speed in speeds]
 
 
 def dict_stats(password, dict_words, verbose=False):
@@ -467,7 +448,7 @@ def password_stats(dict_pass=None, dictionary=None,
             if verbose is True:
                 print('Detected uppercase letters in password')
             num_parts += len(upper_letters)
-        if len(pass_set.intersection(special_chars)) != 0:
+        if len(pass_set.intersection(numbers)) != 0:
             if verbose is True:
                 print('Detected numbers in password')
             num_parts += len(numbers)
@@ -483,9 +464,11 @@ def password_stats(dict_pass=None, dictionary=None,
         output['entropy_raw'] = log(output['combinations_raw'], 2)
 
     if calc_crack_table is True:
-        times = [str(float(output['combinations'] / 2) / speed)
+        times = [float(output['combinations'] / 2 / speed)
                  for speed in guess_speeds]
+        times = ['{0:.2e}'.format(time) for time in times]
         times.insert(0, 'Time to Guess (sec)')
+        guess_speeds = ['{0:.2e}'.format(speed) for speed in guess_speeds]
         guess_speeds.insert(0, 'Guess Speeds (passwords/sec)')
         table = PrettyTable(guess_speeds)
         table.add_row(times)
@@ -509,7 +492,7 @@ def print_stats(combinations, entropy):
         Password Entropy: 97.24
     """
 
-    print('Password Combinations: {0:.2e}'.format(Decimal(combinations)))
+    print('Password Combinations: {0:.2e}'.format(combinations))
     print('Password Entropy: {0:.2f}'.format(entropy))
 
 
@@ -520,37 +503,92 @@ def main(args):
         args (ArgumentParser): argparse ArgumentParser class
     """
 
-    if args.tool == 'generator':
+    if args.tool == 'generator' or args.tool == 'analyzer':
 
-        if args.lower_letters or args.upper_letters or args.special_characters\
-                or args.numbers:
-            args.all = False
+        if args.tool == 'generator':
 
-        if args.alphanumeric:
-            args.all = False
-            args.lower_letters = True
-            args.upper_letters = True
-            args.numbers = True
-            args.special_characters = False
+            if args.lower_letters is True or args.upper_letters is True or \
+                    args.special_characters is True or args.numbers is True:
+                args.all = False
 
-        chars = password_characters(all=args.all,
-                                    lower_letters=args.lower_letters,
-                                    upper_letters=args.upper_letters,
-                                    numbers=args.numbers,
-                                    special_chars=args.special_characters)
+            if args.alphanumeric is True:
+                args.all = False
+                args.lower_letters = True
+                args.upper_letters = True
+                args.numbers = True
+                args.special_characters = False
 
-        password = generate_password(chars, length=args.length)[0]
+            chars = password_characters(all=args.all,
+                                        lower_letters=args.lower_letters,
+                                        upper_letters=args.upper_letters,
+                                        numbers=args.numbers,
+                                        special_chars=args.special_characters)
+            num_chars = len(chars)
 
-        message = 'Password: {0}'.format(password)
-        print(message)
-        clearmem(message)
+            password = generate_password(chars, length=args.length)[0]
 
-        if args.stats:
-            combinations, entropy = basic_stats(password)
-            print_stats(combinations, entropy)
+            message = 'Password: {0}'.format(password)
+            print(message)
+            clearmem(message)
+
+        elif args.tool == 'analyzer':
+
+            password = getpass()
+
+            # Generate password sets for analysis
+            lower_letters = password_characters(all=False, lower_letters=True)
+            upper_letters = password_characters(all=False, upper_letters=True)
+            numbers = password_characters(all=False, numbers=True)
+            special_chars = password_characters(all=False, special_chars=True)
+            pass_set = set(password)
+
+            # Detect characters in password
+            num_chars = 0
+            if len(pass_set.intersection(lower_letters)) != 0:
+                if args.secure is True:
+                    print('Detected lowercase letters in password')
+                num_chars += len(lower_letters)
+            if len(pass_set.intersection(upper_letters)) != 0:
+                if args.secure is True:
+                    print('Detected uppercase letters in password')
+                num_chars += len(upper_letters)
+            if len(pass_set.intersection(numbers)) != 0:
+                if args.secure is True:
+                    print('Detected numbers in password')
+                num_chars += len(numbers)
+            if len(pass_set.intersection(special_chars)) != 0:
+                if args.secure is True:
+                    print('Detected special characters in password')
+                num_chars += len(special_chars)
+
+        # Analyze password and present stats
+        if args.tool == 'analyzer' or args.stats is True:
+            stats = password_stats(pass_len=len(password),
+                                   num_parts=num_chars,
+                                   guess_speeds=args.guess_speeds,
+                                   verbose=args.secure)
+            print_stats(stats['combinations'], stats['entropy'])
+            print('{0}Average Time to Cracked Password'.format(os.linesep))
+            # TODO: Figure out why works with analyzer but not stats
+            print(stats['guess_table'])
+
+        # Clear all references to password
+        if args.tool == 'generator':
+            for c in chars:
+                clearmem(c)
+        elif args.tool == 'analyzer':
+            for a, b, c, d, e in izip_longest(lower_letters, upper_letters,
+                                              numbers, special_chars,
+                                              pass_set, fillvalue=''):
+                clearmem(a)
+                clearmem(b)
+                clearmem(c)
+                clearmem(d)
+                clearmem(e)
 
         clearmem(password)
 
+    # TODO: Make dict functions work with password_stats
     elif args.tool == 'dict_generator':
 
         # Raise error if lengths would produce zero words to choose from
@@ -591,21 +629,6 @@ def main(args):
             print_stats(combinations, entropy)
 
         clearmem(password)
-
-    elif args.tool == 'analyzer':
-
-        # TODO: Added cracking speed tables
-        # TODO: Added 'secure for [activity]' print
-
-        password = getpass()
-        combinations, entropy = basic_stats(password, verbose=True)
-        clearmem(password)
-        print_stats(combinations, entropy)
-        # Cite in docs: 3.5e+8 gizmodo/5966169/the-hardware-hackers-use-to-
-        # crack-your-passwords
-        # 4.0+12 AntMiner S7
-        # 1.0e+14 NSA?
-        crack_speeds = crack_times(combinations, [3.4e+8, 4.0e+12, 1.0e+14])
 
     elif args.tool == 'dict_analyzer':
 
@@ -649,10 +672,15 @@ if __name__ == '__main__':
 
     analyzer = subparsers.add_parser('analyzer',
                                      help='Analyze a given password')
-    analyzer.add_argument('-t', '--detailed',
+    analyzer.add_argument('-g', '--guess_speeds',
+                          default=[3.4e+8, 4.0e+12, 1.0e+14],
+                          nargs='+',
+                          type=float,
+                          help='password guesses per second by hacker')
+    analyzer.add_argument('-r', '--secure',
                           action='store_true',
-                          help='produce detailed password stats, '
-                               'interpret results with a grain of salt')
+                          help='Environment is secure: prints password '
+                               'details')
 
     dict_analyzer = subparsers.add_parser('dict_analyzer',
                                           help='Analyze a dictionary-based '
@@ -661,7 +689,7 @@ if __name__ == '__main__':
                                default=5,
                                type=int,
                                help='minimum length word to use in password')
-    dict_analyzer.add_argument('-s', '--safe',
+    dict_analyzer.add_argument('-s', '--secure',
                                action='store_true',
                                help='display words found in password, others '
                                     'can see password and aspgen can\'t '
@@ -703,6 +731,11 @@ if __name__ == '__main__':
                            default=True,
                            action='store_true',
                            help='permit all characters in password [Default]')
+    generator.add_argument('-g', '--guess_speeds',
+                           default=[3.4e+8, 4.0e+12, 1.0e+14],
+                           nargs='+',
+                           type=float,
+                           help='password guesses per second by hacker')
     generator.add_argument('-l', '--length',
                            default=12,
                            type=int,
@@ -717,6 +750,10 @@ if __name__ == '__main__':
                            action='store_true',
                            help='permit all letters and numbers in password, '
                                 'same as -l, -n, and -u')
+    generator.add_argument('-r', '--secure',
+                           action='store_true',
+                           help='Environment is secure: prints password '
+                                'details')
     generator.add_argument('-s', '--special_characters',
                            action='store_true',
                            help='permit special characters in password')
@@ -731,3 +768,9 @@ if __name__ == '__main__':
     main(args)
 
     sys.exit(0)
+
+# TODO: Analyze below
+# Cite in docs: 3.5e+8 gizmodo/5966169/the-hardware-hackers-use-to-
+# crack-your-passwords
+# 4.0+12 AntMiner S7
+# 1.0e+14 NSA?
