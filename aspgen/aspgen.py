@@ -26,85 +26,7 @@ __license__ = 'GPLv3'
 __maintainer__ = 'Alex Hyer'
 __credits__ = 'Generic Human'
 __status__ = 'Alpha'
-__version__ = '0.0.1a18'
-
-
-def basic_stats(password, verbose=False):
-    """Detects password composition and produces basic stats
-
-    Args:
-        password (str): password to analyze
-
-        verbose (bool): If True, prints progress messages
-
-    Returns:
-        int, float: number of password combinations and entropy of password
-
-    Example:
-        >>> combinations, entropy = basic_stats('password')
-        >>> print(combinations)
-        208827064576
-        >>> print(entropy)
-        37.6035177451
-    """
-
-    # Get character sets
-    pass_set = set(password)
-    lower_letters = set(password_characters(all=False, lower_letters=True))
-    upper_letters = set(password_characters(all=False, upper_letters=True))
-    special_chars = set(password_characters(all=False, special_chars=True))
-
-    possible_chars = 0
-
-    # Detect characters and combine sets
-    if len(pass_set.intersection(lower_letters)) != 0:
-        if verbose:
-            print('Detected lowercase letters in password')
-        possible_chars += len(lower_letters)
-    if len(pass_set.intersection(upper_letters)) != 0:
-        if verbose:
-            print('Detected uppercase letters in password')
-        possible_chars += len(upper_letters)
-    if len(pass_set.intersection(special_chars)) != 0:
-        if verbose:
-            print('Detected special characters in password')
-        possible_chars += len(special_chars)
-
-    combinations = possible_chars ** len(password)
-    entropy = log(combinations, 2)
-
-    return combinations, entropy
-
-
-def dict_stats(password, dict_words, verbose=False):
-    """Analyzes dictionary password and returns statistics
-
-    Args:
-        password (str): dictionary password to analyze
-
-        dict_words (list): list of words password may come from
-
-        verbose (bool): If True, print progress messages
-
-    Returns:
-        int, float: number of password combinations and entropy of password
-
-    Example:
-        >>> from pkg_resources import resource_string
-        >>> dict_words = resource_string('aspgen', 'common_words.txt').split()
-        >>> combinations, entropy = dict_stats('thecatinthehat', dict_words)
-        >>> print_stats(combinations, entropy)
-        Password Combinations: 3.20e+21
-        Password Entropy: 71.44
-    """
-
-    words = infer_spaces(password, dict_words)
-    if verbose:
-        print('{0} words found in password'.format(str(len(words))))
-    combinations = len(dict_words) ** len(words)
-    entropy = log(combinations, 2)
-
-    return combinations, entropy
+__version__ = '0.0.1a19'
 
 
 def generate_password(chars, length, get_parts=False, secure=True):
@@ -644,8 +566,10 @@ def main(args):
                                    verbose=args.secure)
             print_stats(stats['combinations'], stats['entropy'])
             print('{0}Average Time to Cracked Password'.format(os.linesep))
-            # TODO: Figure out why works with analyzer but not stats
             print(stats['guess_table'])
+
+        for word in dict_words:
+            clearmem(word)
 
         clearmem(password)
 
