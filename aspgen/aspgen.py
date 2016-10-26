@@ -26,7 +26,7 @@ __license__ = 'GPLv3'
 __maintainer__ = 'Alex Hyer'
 __credits__ = 'Generic Human'
 __status__ = 'Alpha'
-__version__ = '0.0.1a17'
+__version__ = '0.0.1a18'
 
 
 def basic_stats(password, verbose=False):
@@ -427,6 +427,8 @@ def password_stats(dict_pass=None, dictionary=None,
         output['words'] = infer_spaces(dict_pass, dictionary)
         output['combinations'] = len(dictionary) ** len(output['words'])
         output['entropy'] = log(output['combinations'], 2)
+        if verbose is True:
+            print('Words in Password: {0}'.format(' '.join(output['words'])))
 
         if verbose is True:
             print('Determining characters in password')
@@ -457,7 +459,7 @@ def password_stats(dict_pass=None, dictionary=None,
                 print('Detected special characters in password')
             num_parts += len(special_chars)
 
-        if args.verbose:
+        if verbose:
             print('Calculating basic stats for dictionary password')
         pass_len = len(dict_pass)
         output['combinations_raw'] = num_parts ** pass_len
@@ -525,7 +527,7 @@ def main(args):
                                         special_chars=args.special_characters)
             num_chars = len(chars)
 
-            password = generate_password(chars, length=args.length)[0]
+            password = generate_password(chars, args.length)[0]
 
             message = 'Password: {0}'.format(password)
             print(message)
@@ -588,79 +590,64 @@ def main(args):
 
         clearmem(password)
 
-    # TODO: Make dict functions work with password_stats
-    elif args.tool == 'dict_generator':
+    elif args.tool == 'dict_analyzer' or args.tool == 'dict_generator':
 
-        # Raise error if lengths would produce zero words to choose from
-        if args.max_length < args.min_length:
-            raise ValueError('Max word length is less than min word length')
+        if args.tool == 'dict_generator':
 
-        dict_words = []
-        if args.uncommon:
-            with resource_stream('aspgen', 'words.txt') as in_handle:
-                for word in in_handle:
-                    word = word.strip()
-                    if args.min_length <= len(word) <= args.max_length:
-                        dict_words.append(word)
-        else:
+            # Raise error if lengths would produce zero words to choose from
+            if args.max_length < args.min_length:
+                raise ValueError('Max word length is less than min word length')
+
+            dict_words = []
+            if args.uncommon is True:
+                with resource_stream('aspgen', 'words.txt') as in_handle:
+                    for word in in_handle:
+                        word = word.strip()
+                        if args.min_length <= len(word) <= args.max_length:
+                            dict_words.append(word)
+            else:
+                with resource_stream('aspgen', 'common_words.txt') as in_handle:
+                    for word in in_handle:
+                        word = word.strip()
+                        if args.min_length <= len(word) <= args.max_length:
+                            dict_words.append(word)
+
+            password, words = generate_password(dict_words, args.length,
+                                                get_parts=True)
+
+            message = 'Words in Password: {0}'.format(' '.join(words))
+            print(message)
+            clearmem(message)
+
+            if args.length > 1:  # clearmem will clear password if one word
+                for word in words:
+                    clearmem(word)
+
+            message = 'Password: {0}'.format(password)
+            print(message)
+            clearmem(message)
+
+        elif args.tool == 'dict_analyzer':
+
+            dict_words = []
             with resource_stream('aspgen', 'common_words.txt') as in_handle:
                 for word in in_handle:
                     word = word.strip()
-                    if args.min_length <= len(word) <= args.max_length:
-                        dict_words.append(word)
-
-        password, words = generate_password(dict_words, args.length,
-                                            get_parts=True)
-
-        message = 'Words in Password: {0}'.format(' '.join(words))
-        print(message)
-        clearmem(message)
-
-        if args.length > 1:  # clearmem will clear password if one word
-            for word in words:
-                clearmem(word)
-
-        message = 'Password: {0}'.format(password)
-        print(message)
-        clearmem(message)
-
-        if args.stats:
-            combinations, entropy = dict_stats(password, dict_words)
-            print_stats(combinations, entropy)
-
-        clearmem(password)
-
-    elif args.tool == 'dict_analyzer':
-
-        # TODO: Added brute-force vs. dict calculator
-        # TODO: Added cracking speed tables
-        # TODO: Added 'secure for [activity]' print
-
-        # Raise error if lengths would produce zero words to choose from
-        if args.max_length < args.min_length:
-            raise ValueError('Max word length is less than min word length')
-
-        dict_words = []
-        with resource_stream('aspgen', 'common_words.txt') as in_handle:
-            for word in in_handle:
-                word = word.strip()
-                if args.min_length <= len(word) <= args.max_length:
                     dict_words.append(word)
 
-        password = getpass()
-        words = infer_spaces(password, dict_words)
-        print('Password appears to consist of {0} words'.format(
-            str(len(words))))
-        if args.safe:
-            message = 'Words Found: {0}'.format(' '.join(words))
-            print(message)
-            clearmem(message)
-        if args.length > 1:  # clearmem will delete password if one word
-            for word in words:
-                clearmem(word)
-        combinations, entropy = dict_stats(password, dict_words)
+            password = getpass()
+
+        if args.tool == 'dict_analyzer' or args.stats is True:
+            stats = password_stats(dict_pass=password,
+                                   dictionary=dict_words,
+                                   guess_speeds=args.guess_speeds,
+                                   verbose=args.secure)
+            print_stats(stats['combinations'], stats['entropy'])
+            print('{0}Average Time to Cracked Password'.format(os.linesep))
+            # TODO: Figure out why works with analyzer but not stats
+            print(stats['guess_table'])
+
         clearmem(password)
-        print_stats(combinations, entropy)
 
 
 if __name__ == '__main__':
@@ -685,11 +672,16 @@ if __name__ == '__main__':
     dict_analyzer = subparsers.add_parser('dict_analyzer',
                                           help='Analyze a dictionary-based '
                                                'password')
+    dict_analyzer.add_argument('-g', '--guess_speeds',
+                               default=[3.4e+8, 4.0e+12, 1.0e+14],
+                               nargs='+',
+                               type=float,
+                               help='password guesses per second by hacker')
     dict_analyzer.add_argument('-m', '--min_length',
                                default=5,
                                type=int,
                                help='minimum length word to use in password')
-    dict_analyzer.add_argument('-s', '--secure',
+    dict_analyzer.add_argument('-r', '--secure',
                                action='store_true',
                                help='display words found in password, others '
                                     'can see password and aspgen can\'t '
@@ -706,6 +698,11 @@ if __name__ == '__main__':
     dict_generator = subparsers.add_parser('dict_generator',
                                            help='Securely generate a '
                                                 'dictionary-based password')
+    dict_generator.add_argument('-g', '--guess_speeds',
+                                default=[3.4e+8, 4.0e+12, 1.0e+14],
+                                nargs='+',
+                                type=float,
+                                help='password guesses per second by hacker')
     dict_generator.add_argument('-l', '--length',
                                 default=6,
                                 type=int,
@@ -714,6 +711,12 @@ if __name__ == '__main__':
                                 default=5,
                                 type=int,
                                 help='minimum length word to use in password')
+    dict_generator.add_argument('-r', '--secure',
+                                action='store_true',
+                                help='display words found in password, others '
+                                     'can see password and aspgen can\'t '
+                                     'delete the password from terminal '
+                                     'memory')
     dict_generator.add_argument('-t', '--stats',
                                 action='store_true',
                                 help='print stats on password')

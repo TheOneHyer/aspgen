@@ -1,2 +1,3 @@
-include aspgen/dictionary.txt
+include aspgen/common_words.txt
+include aspgen/words.txt
 include README.md
