@@ -24,10 +24,10 @@ Copyright:
 from setuptools import setup
 
 setup(name='aspgen',
-      version='0.0.1a20',
+      version='0.0.1b1',
       description='A Secure Password GENerator',
       classifiers=[
-          'Development Status :: 1 - Planning',
+          'Development Status :: 4 - Beta',
           'Intended Audience :: End Users/Desktop',
           'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
           'Natural Language :: English',
@@ -37,7 +37,7 @@ setup(name='aspgen',
       ],
       keywords='secure password generator',
       url='https://github.com/TheOneHyer/aspgen',
-      download_url='https://github.com/TheOneHyer/aspgen/tarball/0.0.1a20',
+      download_url='https://github.com/TheOneHyer/aspgen/tarball/0.0.1b1',
       author='Alex Hyer',
       author_email='theonehyer@gmail.com',
       license='GPLv3',
