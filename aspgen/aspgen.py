@@ -19,13 +19,14 @@ from prettytable import PrettyTable
 import random
 from SecureString import clearmem
 import sys
+import textwrap
 
 __author__ = 'Alex Hyer'
 __email__ = 'theonehyer@gmail.com'
 __license__ = 'GPLv3'
 __maintainer__ = 'Alex Hyer'
 __credits__ = 'Generic Human'
-__status__ = 'Alpha'
+__status__ = 'Beta'
 __version__ = '0.0.1b1'
 
 
@@ -454,6 +455,7 @@ def main(args):
             message = 'Password: {0}'.format(password)
             print(message)
             clearmem(message)
+            print()
 
         elif args.tool == 'analyzer':
 
@@ -487,13 +489,15 @@ def main(args):
 
         # Analyze password and present stats
         if args.tool == 'analyzer' or args.stats is True:
+            print('Password Stats')
+            print('--------------')
+            print()
             stats = password_stats(pass_len=len(password),
                                    num_parts=num_chars,
                                    guess_speeds=args.guess_speeds,
                                    verbose=args.secure)
             print_stats(stats['combinations'], stats['entropy'])
             print('{0}Average Time to Cracked Password'.format(os.linesep))
-            # TODO: Figure out why works with analyzer but not stats
             print(stats['guess_table'])
 
         # Clear all references to password
@@ -540,7 +544,6 @@ def main(args):
             message = 'Words in Password: {0}'.format(' '.join(words))
             print(message)
             clearmem(message)
-
             if args.length > 1:  # clearmem will clear password if one word
                 for word in words:
                     clearmem(word)
@@ -548,6 +551,7 @@ def main(args):
             message = 'Password: {0}'.format(password)
             print(message)
             clearmem(message)
+            print()
 
         elif args.tool == 'dict_analyzer':
 
@@ -562,6 +566,9 @@ def main(args):
         stats = None
 
         if args.tool == 'dict_generator' and args.stats is True:
+            print('Password Stats')
+            print('--------------')
+            print()
             stats = password_stats(pass_len=args.length,
                                    num_parts=len(dict_words),
                                    guess_speeds=args.guess_speeds,
@@ -569,6 +576,9 @@ def main(args):
             stats['combinations_raw'] = 26 ** len(password)
             stats['entropy_raw'] = log(stats['combinations_raw'], 2)
         elif args.tool == 'dict_analyzer':
+            print('Password Stats')
+            print('--------------')
+            print()
             stats = password_stats(dict_pass=password,
                                    dictionary=dict_words,
                                    guess_speeds=args.guess_speeds,
@@ -577,15 +587,22 @@ def main(args):
             print_stats(stats['combinations'], stats['entropy'])
             print('{0}Average Time to Cracked Password'.format(os.linesep))
             print(stats['guess_table'])
+            print()
 
         if stats is not None and stats['entropy_raw'] > stats['entropy']:
-            print('-------------------')
-            print('      WARNING      ')
-            print('-------------------')
-            print('Your password is more vulnerable to brute force attacks')
-            print('than dictionary attacks. Consider generating a dictionary')
-            print('password with more words or longer words.')
-            print('Brute force stats:')
+            print('!' * 79)
+            print('!', 'WARNING'.center(75), '!')
+            print('!' * 79)
+            print()
+            warning = 'Your password is more vulnerable to brute force ' \
+                      'attacks than dictionary attacks. Consider generating ' \
+                      'a dictionary password with more words or longer words.'
+            warning = textwrap.wrap(warning, 79)
+            for line in warning:
+                print(line)
+            print()
+            print('Brute Force Stats')
+            print('-----------------')
             print_stats(stats['combinations_raw'], stats['entropy_raw'])
 
         for word in dict_words:
@@ -594,7 +611,7 @@ def main(args):
         clearmem(password)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # TODO: update guesses argument
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.
                                      RawDescriptionHelpFormatter)
@@ -712,7 +729,35 @@ if __name__ == '__main__':
                            help='permit uppercase letters in password')
     args = parser.parse_args()
 
+    # TODO: add security settings
+
+    # Print fanciful output to record password generation information
+    print('-' * 79)
+    print('aspgen V{0}'.format(__version__).center(79))
+    print('-' * 79)
+    print()
+    print('Parameters')
+    print('----------')
+    lines = textwrap.wrap('Command: {0}'.format(' '.join(sys.argv[:])), 79)
+    for line in lines:
+        print(line)
+    for arg in vars(args):
+        print('{0}: {1}'.format(arg, getattr(args, arg)))
+    print()
+    print('Environmental Data')
+    print('------------------')
+    # TODO: Fill in this section
+    print()
+    print('Password')
+    print('--------')
+    print()
+
     main(args)
+
+    print()
+    print('-' * 79)
+    print('Exiting aspgen V{0}'.format(__version__).center(79))
+    print('-' * 79)
 
     sys.exit(0)
 
