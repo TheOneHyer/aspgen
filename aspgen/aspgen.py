@@ -26,7 +26,7 @@ __license__ = 'GPLv3'
 __maintainer__ = 'Alex Hyer'
 __credits__ = 'Generic Human'
 __status__ = 'Alpha'
-__version__ = '0.0.1a19'
+__version__ = '0.0.1a20'
 
 
 def generate_password(chars, length, get_parts=False, secure=True):
@@ -559,14 +559,34 @@ def main(args):
 
             password = getpass()
 
-        if args.tool == 'dict_analyzer' or args.stats is True:
+        stats = None
+
+        if args.tool == 'dict_generator' and args.stats is True:
+            stats = password_stats(pass_len=args.length,
+                                   num_parts=len(dict_words),
+                                   guess_speeds=args.guess_speeds,
+                                   verbose=args.secure)
+            stats['combinations_raw'] = 26 ** len(password)
+            stats['entropy_raw'] = log(stats['combinations_raw'], 2)
+        elif args.tool == 'dict_analyzer':
             stats = password_stats(dict_pass=password,
                                    dictionary=dict_words,
                                    guess_speeds=args.guess_speeds,
                                    verbose=args.secure)
+        if args.tool == 'dict_analyzer' or args.stats is True:
             print_stats(stats['combinations'], stats['entropy'])
             print('{0}Average Time to Cracked Password'.format(os.linesep))
             print(stats['guess_table'])
+
+        if stats is not None and stats['entropy_raw'] > stats['entropy']:
+            print('-------------------')
+            print('      WARNING      ')
+            print('-------------------')
+            print('Your password is more vulnerable to brute force attacks')
+            print('than dictionary attacks. Consider generating a dictionary')
+            print('password with more words or longer words.')
+            print('Brute force stats:')
+            print_stats(stats['combinations_raw'], stats['entropy_raw'])
 
         for word in dict_words:
             clearmem(word)
