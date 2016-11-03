@@ -16,7 +16,9 @@ import os
 from pkg_resources import resource_stream
 from prettytable import PrettyTable
 import random
+import re
 from SecureString import clearmem
+#import cStringIO
 import sys
 import textwrap
 
@@ -26,7 +28,7 @@ __license__ = 'GPLv3'
 __maintainer__ = 'Alex Hyer'
 __credits__ = 'Generic Human'
 __status__ = 'Beta'
-__version__ = '0.0.1b3'
+__version__ = '0.0.1b4'
 
 
 def generate_password(chars, length, get_parts=False, secure=True):
@@ -144,6 +146,25 @@ def infer_spaces(string, words):
         i -= l
 
     return [i for i in reversed(out)]
+
+
+def par(message, to_print=False, report=None):
+    """Print And Report, convenience wrapper for printing to screen and file
+
+    Args:
+        message (str): message to print or write
+
+        to_print (bool): Whether or not to print message to screen
+
+        report (File): file handle to write output to
+    """
+
+    if report is not None:
+        report.write(message)
+    if to_print is True:
+        if message.endswith(os.linesep):
+            message = re.sub(os.linesep + '$', '', message)
+        print(message)
 
 
 def password_characters(all=True, lower_letters=False, upper_letters=False,
@@ -460,18 +481,16 @@ def main(args):
             password = generate_password(chars, args.length, secure=False)[0]
 
             message = 'Password: {0}'.format(password)
-            args.report.write(message + os.linesep)
-            if args.report != sys.stdout:
-                print(message)
+            par(message + os.linesep, to_print=True, report=args.report)
             clearmem(message)
-            args.report.write(os.linesep)
+            par(os.linesep, report=args.report)
 
         elif args.tool == 'analyzer':
 
             password = getpass()
-            args.report.write('Password: ' + password)
-            args.report.write(os.linesep)
-            args.report.write(os.linesep)
+            par('Password: ' + password, report=args.report)
+            par(os.linesep, report=args.report)
+            par(os.linesep, report=args.report)
 
             # Generate password sets for analysis
             lower_letters = password_characters(all=False, lower_letters=True)
@@ -483,44 +502,43 @@ def main(args):
             # Detect characters in password
             num_chars = 0
             if len(pass_set.intersection(lower_letters)) != 0:
-                if args.secure is True:
-                    print('Detected lowercase letters in password')
+                par('Detected lowercase letters in password' + os.linesep,
+                    report=args.report)
                 num_chars += len(lower_letters)
             if len(pass_set.intersection(upper_letters)) != 0:
-                if args.secure is True:
-                    print('Detected uppercase letters in password')
+                par('Detected uppercase letters in password' + os.linesep,
+                    report=args.report)
                 num_chars += len(upper_letters)
             if len(pass_set.intersection(numbers)) != 0:
-                if args.secure is True:
-                    print('Detected numbers in password')
+                par('Detected numbers in password' + os.linesep,
+                    report=args.report)
                 num_chars += len(numbers)
             if len(pass_set.intersection(special_chars)) != 0:
-                if args.secure is True:
-                    print('Detected special characters in password')
+                par('Detected special characters in password' + os.linesep,
+                    report=args.report)
                 num_chars += len(special_chars)
+            par(os.linesep, report=args.report)
 
         # Analyze password and present stats
         if args.tool == 'analyzer' or args.stats is True:
-            args.report.write('Password Stats' + os.linesep)
-            args.report.write('--------------' + os.linesep)
-            args.report.write(os.linesep)
+            par('Password Stats' + os.linesep, report=args.report)
+            par('--------------' + os.linesep, report=args.report)
+            par(os.linesep, report=args.report)
             stats = password_stats(pass_len=len(password),
                                    num_parts=num_chars,
                                    guess_speeds=args.guess_speeds,
                                    verbose=args.secure)
             c, e = print_stats(stats['combinations'], stats['entropy'])
-            args.report.write(c + os.linesep)
-            args.report.write(e + os.linesep)
-            if args.report != sys.stdout:
-                print(c)
-                print(e)
+            par(c + os.linesep, to_print=True, report=args.report)
+            par(e + os.linesep, to_print=True, report=args.report)
             if stats['guess_table'] is not None:
-                args.report.write('{0}Average Time to Cracked Password'
-                                  .format(os.linesep) + os.linesep)
-                args.report.write(str(stats['guess_table']))
-                args.report.write(os.linesep)
+                par('{0}Average Time to Cracked Password'.format(os.linesep)
+                    + os.linesep, to_print=True, report=args.report)
+                par(str(stats['guess_table']), to_print=True,
+                    report=args.report)
+                par(os.linesep, report=args.report)
 
-            args.report.write(os.linesep)
+            par(os.linesep, report=args.report)
 
         clearmem(password)
 
@@ -552,18 +570,16 @@ def main(args):
                                                 get_parts=True)
 
             message = 'Words in Password: {0}'.format(' '.join(words))
-            args.report.write(message + os.linesep)
+            par(message + os.linesep, to_print=True, report=args.report)
             clearmem(message)
             if args.length > 1:  # clearmem will clear password if one word
                 for word in words:
                     clearmem(word)
 
             message = 'Password: {0}'.format(password)
-            args.report.write(message + os.linesep)
-            if args.report != sys.stdout:
-                print(message)
+            par(message + os.linesep, to_print=True, report=args.report)
             clearmem(message)
-            args.report.write(os.linesep)
+            par(os.linesep, report=args.report)
 
         elif args.tool == 'dict_analyzer':
 
@@ -575,16 +591,16 @@ def main(args):
 
             password = getpass()
 
-            args.report.write('Password: ' + password)
-            args.report.write(os.linesep)
-            args.report.write(os.linesep)
+            par('Password: ' + password, report=args.report)
+            par(os.linesep, report=args.report)
+            par(os.linesep, report=args.report)
 
         stats = None
 
         if args.tool == 'dict_generator' and args.stats is True:
-            args.report.write('Password Stats' + os.linesep)
-            args.report.write('--------------' + os.linesep)
-            args.report.write(os.linesep)
+            par('Password Stats' + os.linesep, report=args.report)
+            par('--------------' + os.linesep, report=args.report)
+            par(os.linesep, report=args.report)
             stats = password_stats(pass_len=args.length,
                                    num_parts=len(dict_words),
                                    guess_speeds=args.guess_speeds,
@@ -593,49 +609,52 @@ def main(args):
             stats['entropy_raw'] = log(stats['combinations_raw'], 2)
 
         elif args.tool == 'dict_analyzer':
-            args.report.write('Password Stats' + os.linesep)
-            args.report.write('--------------' + os.linesep)
-            args.report.write(os.linesep)
+            par('Password Stats' + os.linesep, report=args.report)
+            par('--------------' + os.linesep, report=args.report)
+            par(os.linesep, report=args.report)
             stats = password_stats(dict_pass=password,
                                    dictionary=dict_words,
                                    guess_speeds=args.guess_speeds,
                                    verbose=args.secure)
+            par('Words in Password: {0}{1}'
+                .format(' '.join(stats['words']), os.linesep),
+                to_print=True, report=args.report)
 
         if args.tool == 'dict_analyzer' or args.stats is True:
             c, e = print_stats(stats['combinations'], stats['entropy'])
-            args.report.write(c + os.linesep)
-            args.report.write(e + os.linesep)
-            if args.report != sys.stdout:
-                print(c)
-                print(e)
+            par(c + os.linesep, to_print=True, report=args.report)
+            par(e + os.linesep, to_print=True, report=args.report)
             if args.guess_speeds is not None:
-                args.report.write('{0}Average Time to Cracked Password'
-                                  .format(os.linesep) + os.linesep)
-                args.report.write(str(stats['guess_table']))
-                args.report.write(os.linesep)
-                if args.report != sys.stdout:
-                    print(stats['guess_table'])
+                par('{0}Average Time to Cracked Password'.format(os.linesep)
+                    + os.linesep, to_print=True, report=args.report)
+                par(str(stats['guess_table']), to_print=True,
+                    report=args.report)
+                par(os.linesep, report=args.report)
 
         if stats is not None and stats['entropy_raw'] < stats['entropy']:
-            args.report.write(os.linesep)
-            args.report.write('!' * 79 + os.linesep)
-            args.report.write('!' + 'WARNING'.center(77) + '!' + os.linesep)
-            args.report.write('!' * 79 + os.linesep)
-            args.report.write(os.linesep)
-            args.report.write('Your password is more vulnerable to brute '
-                              'force ' + os.linesep)
-            args.report.write('attacks than dictionary attacks. Consider '
-                              'generating ' + os.linesep)
-            args.report.write('a dictionary password with more words or '
-                              'longer words.' + os.linesep)
-            args.report.write(os.linesep)
-            args.report.write('Brute Force Stats' + os.linesep)
-            args.report.write('-----------------' + os.linesep)
+            par(os.linesep, to_print=True, report=args.report)
+            par('!' * 79 + os.linesep, to_print=True, report=args.report)
+            par('!' + 'WARNING'.center(77) + '!' + os.linesep,
+                to_print=True, report=args.report)
+            par('!' * 79 + os.linesep, to_print=True, report=args.report)
+            par(os.linesep, to_print=True, report=args.report)
+            par('Your password is more vulnerable to brute force '
+                + os.linesep, to_print=True, report=args.report)
+            par('attacks than dictionary attacks. Consider generating '
+                + os.linesep, to_print=True, report=args.report)
+            par('a dictionary password with more words or longer words.'
+                + os.linesep, to_print=True, report=args.report)
+            par(os.linesep, to_print=True, report=args.report)
+            par('Brute Force Stats' + os.linesep, to_print=True,
+                report=args.report)
+            par('-----------------' + os.linesep, to_print=True,
+                report=args.report)
+            par(os.linesep, to_print=True, report=args.report)
             c, e = print_stats(stats['combinations_raw'], stats['entropy_raw'])
-            args.report.write(c + os.linesep)
-            args.report.write(e + os.linesep)
+            par(c + os.linesep, to_print=True, report=args.report)
+            par(e + os.linesep, to_print=True, report=args.report)
 
-        args.report.write(os.linesep)
+        par(os.linesep, report=args.report)
 
         for word in dict_words:
             clearmem(word)
@@ -648,9 +667,10 @@ if __name__ == '__main__':  # TODO: update guesses argument
                                      formatter_class=argparse.
                                      RawDescriptionHelpFormatter)
     parser.add_argument('-r', '--report',
-                        default=sys.stdout,
+                        default=None,
                         type=argparse.FileType('w'),
-                        help='generate runtime report')
+                        help='generate runtime report, contains sensitive '
+                             'data')
     subparsers = parser.add_subparsers(title='Tools',
                                        dest='tool')
 
@@ -660,10 +680,6 @@ if __name__ == '__main__':  # TODO: update guesses argument
                           nargs='+',
                           type=float,
                           help='password guesses per second by hacker')
-    analyzer.add_argument('-r', '--secure',
-                          action='store_true',
-                          help='Environment is secure: prints password '
-                               'details')
 
     dict_analyzer = subparsers.add_parser('dict_analyzer',
                                           help='Analyze a dictionary-based '
@@ -677,11 +693,6 @@ if __name__ == '__main__':  # TODO: update guesses argument
                                default=5,
                                type=int,
                                help='minimum length word to use in password')
-    dict_analyzer.add_argument('-r', '--secure',
-                               action='store_true',
-                               help='display words found in password, others '
-                                    'can see password and aspgen can\'t '
-                                    'delete the password from terminal memory')
     dict_analyzer.add_argument('-t', '--detailed',
                                action='store_true',
                                help='produce detailed password stats, '
@@ -707,12 +718,6 @@ if __name__ == '__main__':  # TODO: update guesses argument
                                 default=5,
                                 type=int,
                                 help='minimum length word to use in password')
-    dict_generator.add_argument('-r', '--secure',
-                                action='store_true',
-                                help='display words found in password, others '
-                                     'can see password and aspgen can\'t '
-                                     'delete the password from terminal '
-                                     'memory')
     dict_generator.add_argument('-t', '--stats',
                                 action='store_true',
                                 help='print stats on password')
@@ -749,10 +754,6 @@ if __name__ == '__main__':  # TODO: update guesses argument
                            action='store_true',
                            help='permit all letters and numbers in password, '
                                 'same as -l, -n, and -u')
-    generator.add_argument('-r', '--secure',
-                           action='store_true',
-                           help='Environment is secure: prints password '
-                                'details')
     generator.add_argument('-s', '--special_characters',
                            action='store_true',
                            help='permit special characters in password')
@@ -766,46 +767,45 @@ if __name__ == '__main__':  # TODO: update guesses argument
 
     # TODO: add security settings
 
+    # Easter Egg
+    # 3.5e+8: gizmodo/5966169/the-hardware-hackers-use-to-crack-your-passwords
+    # 4.0+12 AntMiner S7
+    # 1.0e+16 NSA?
+    if hasattr(args, 'guess_speeds') is True and args.guess_speeds == [0]:
+        args.guess_speeds = [3.4e+8, 4.0e+12, 1.0e+16]
+
     # Print fanciful output to record password generation information
     if args.report is not None:
-        args.report.write('-' * 79 + os.linesep)
-        args.report.write('aspgen V{0}'.format(__version__).center(79) +
-                          os.linesep)
-        args.report.write('-' * 79 + os.linesep)
-        args.report.write(os.linesep)
-        args.report.write('Parameters' + os.linesep)
-        args.report.write('----------' + os.linesep)
+        par('-' * 79 + os.linesep, report=args.report)
+        par('aspgen V{0}'.format(__version__).center(79) + os.linesep,
+            report=args.report)
+        par('-' * 79 + os.linesep, report=args.report)
+        par(os.linesep, report=args.report)
+        par('Parameters' + os.linesep, report=args.report)
+        par('----------' + os.linesep, report=args.report)
+        par(os.linesep, report=args.report)
         lines = textwrap.wrap('Command: {0}'.format(
                                              os.linesep.join(sys.argv[:])), 79)
         for line in lines:
-            args.report.write(line + os.linesep)
+            par(line + os.linesep, report=args.report)
         for arg in vars(args):
-            args.report.write('{0}: {1}'.format(arg, getattr(args, arg)) +
-                              os.linesep)
-        args.report.write(os.linesep)
-        args.report.write('Environmental Data' + os.linesep)
-        args.report.write('------------------' + os.linesep)
+            par('{0}: {1}'.format(arg, getattr(args, arg)) + os.linesep,
+                report=args.report)
+        par(os.linesep, report=args.report)
+        par('Environmental Data' + os.linesep, report=args.report)
+        par('------------------' + os.linesep, report=args.report)
         # TODO: Fill in this section
-        args.report.write(os.linesep)
-        args.report.write('Password' + os.linesep)
-        args.report.write('--------' + os.linesep)
-        args.report.write(os.linesep)
-
-    if hasattr(args, 'guess_speeds') is True and args.guess_speeds == [0]:
-        args.guess_speeds = [3.4e+8, 4.0e+12, 1.0e+14]
+        par(os.linesep, report=args.report)
+        par('Password' + os.linesep, report=args.report)
+        par('--------' + os.linesep, report=args.report)
+        par(os.linesep, report=args.report)
 
     main(args)
 
     if args.report is not None:
-        args.report.write('-' * 79 + os.linesep)
-        args.report.write('Exiting aspgen V{0}'.format(__version__).center(79)
-                          + os.linesep)
-        args.report.write('-' * 79 + os.linesep)
+        par('-' * 79 + os.linesep, report=args.report)
+        par('Exiting aspgen V{0}'.format(__version__).center(79) + os.linesep,
+            report=args.report)
+        par('-' * 79 + os.linesep, report=args.report)
 
     sys.exit(0)
-
-# TODO: Analyze below
-# Cite in docs: 3.5e+8 gizmodo/5966169/the-hardware-hackers-use-to-
-# crack-your-passwords
-# 4.0+12 AntMiner S7
-# 1.0e+14 NSA?
