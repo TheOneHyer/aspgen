@@ -10,6 +10,8 @@ from __future__ import with_statement
 """
 
 import argparse
+from Crypto.Cipher import AES
+from Crypto.Hash import SHA256
 from getpass import getpass
 from math import log
 import os
@@ -18,7 +20,8 @@ from prettytable import PrettyTable
 import random
 import re
 from SecureString import clearmem
-#import cStringIO
+import cStringIO
+import struct
 import sys
 import textwrap
 
@@ -28,7 +31,85 @@ __license__ = 'GPLv3'
 __maintainer__ = 'Alex Hyer'
 __credits__ = 'Generic Human'
 __status__ = 'Beta'
-__version__ = '0.0.1b4'
+__version__ = '0.0.1b5'
+
+
+# TODO: Reformat these functions in my style
+# http://eli.thegreenplace.net/2010/06/25/
+# aes-encryption-of-files-in-python-with-pycrypto
+def encrypt_file(key, stringio_file, out_filename=None, chunksize=64*1024):
+    """ Encrypts a file using AES (CBC mode) with the
+        given key.
+
+        key:
+            The encryption key - a string that must be
+            either 16, 24 or 32 bytes long. Longer keys
+            are more secure.
+
+        in_filename:
+            Name of the input file
+
+        out_filename:
+            If None, '<in_filename>.enc' will be used.
+
+        chunksize:
+            Sets the size of the chunk which the function
+            uses to read and encrypt the file. Larger chunk
+            sizes can be faster for some files and machines.
+            chunksize must be divisible by 16.
+    """
+
+    iv = ''.join(chr(random.randint(0, 0xFF)) for i in range(16))
+    encryptor = AES.new(key, AES.MODE_CBC, iv)
+    filesize = sys.getsizeof(stringio_file.getvalue())
+
+    with open(out_filename, 'wb') as outfile:
+        outfile.write(struct.pack('<Q', filesize))
+        outfile.write(iv)
+
+        contents = stringio_file.getvalue()
+        content_list = []
+        last_postition = 0
+        for i in range(len(contents) % chunksize + 1):
+            if last_postition + chunksize > len(contents):
+                content_list.append(contents[last_postition:-1])
+            else:
+                content_list.append(content_list[
+                                    last_postition:last_postition + chunksize])
+            last_postition += chunksize
+        content_list = filter(None, content_list)
+
+        for chunk in content_list:
+            if len(chunk) == 0:
+                break
+            elif len(chunk) % 16 != 0:
+                chunk += ' ' * (16 - len(chunk) % 16)
+
+            outfile.write(encryptor.encrypt(chunk))
+
+
+def decrypt_file(key, in_filename, out_filename=None, chunksize=24*1024):
+    """ Decrypts a file using AES (CBC mode) with the
+        given key. Parameters are similar to encrypt_file,
+        with one difference: out_filename, if not supplied
+        will be in_filename without its last extension
+        (i.e. if in_filename is 'aaa.zip.enc' then
+        out_filename will be 'aaa.zip')
+    """
+
+    with open(in_filename, 'rb') as infile:
+        origsize = struct.unpack('<Q', infile.read(struct.calcsize('Q')))[0]
+        iv = infile.read(16)
+        decryptor = AES.new(key, AES.MODE_CBC, iv)
+
+        out = ''
+        while True:
+            chunk = infile.read(chunksize)
+            if len(chunk) == 0:
+                break
+            out += decryptor.decrypt(chunk)
+
+        return out[0:origsize]
 
 
 def generate_password(chars, length, get_parts=False, secure=True):
@@ -526,8 +607,7 @@ def main(args):
             par(os.linesep, report=args.report)
             stats = password_stats(pass_len=len(password),
                                    num_parts=num_chars,
-                                   guess_speeds=args.guess_speeds,
-                                   verbose=args.secure)
+                                   guess_speeds=args.guess_speeds)
             c, e = print_stats(stats['combinations'], stats['entropy'])
             par(c + os.linesep, to_print=True, report=args.report)
             par(e + os.linesep, to_print=True, report=args.report)
@@ -603,8 +683,7 @@ def main(args):
             par(os.linesep, report=args.report)
             stats = password_stats(pass_len=args.length,
                                    num_parts=len(dict_words),
-                                   guess_speeds=args.guess_speeds,
-                                   verbose=args.secure)
+                                   guess_speeds=args.guess_speeds)
             stats['combinations_raw'] = 26 ** len(password)
             stats['entropy_raw'] = log(stats['combinations_raw'], 2)
 
@@ -614,8 +693,7 @@ def main(args):
             par(os.linesep, report=args.report)
             stats = password_stats(dict_pass=password,
                                    dictionary=dict_words,
-                                   guess_speeds=args.guess_speeds,
-                                   verbose=args.secure)
+                                   guess_speeds=args.guess_speeds)
             par('Words in Password: {0}{1}'
                 .format(' '.join(stats['words']), os.linesep),
                 to_print=True, report=args.report)
@@ -666,6 +744,10 @@ if __name__ == '__main__':  # TODO: update guesses argument
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.
                                      RawDescriptionHelpFormatter)
+    parser.add_argument('-e', '--encrypt',
+                        default=None,
+                        type=argparse.FileType('wb'),
+                        help='encrypt file and save key to file')
     parser.add_argument('-r', '--report',
                         default=None,
                         type=argparse.FileType('w'),
@@ -680,6 +762,15 @@ if __name__ == '__main__':  # TODO: update guesses argument
                           nargs='+',
                           type=float,
                           help='password guesses per second by hacker')
+
+    decoder = subparsers.add_parser('decoder',
+                                    help='Decode encrypted report file')
+    decoder.add_argument('report_file',
+                         type=str,
+                         help='aspgen encrypted report file')
+    decoder.add_argument('key_file',
+                         type=argparse.FileType('rb'),
+                         help='key file to unlock report file')
 
     dict_analyzer = subparsers.add_parser('dict_analyzer',
                                           help='Analyze a dictionary-based '
@@ -767,6 +858,22 @@ if __name__ == '__main__':  # TODO: update guesses argument
 
     # TODO: add security settings
 
+    if args.tool == 'decoder':
+        key = args.key_file.read()
+        args.key_file.close()
+        print(decrypt_file(key, args.report_file))
+        sys.exit(0)
+
+    if args.encrypt is not None:
+        try:
+            assert args.report is not None
+        except AssertionError:
+            raise AssertionError('--encrypt requires --report')
+        report_name = args.report.name
+        args.report.close()
+        args.report = cStringIO.StringIO()
+        report_file = open(report_name, 'w')  # Need to open before 'w' gone
+
     # Easter Egg
     # 3.5e+8: gizmodo/5966169/the-hardware-hackers-use-to-crack-your-passwords
     # 4.0+12 AntMiner S7
@@ -807,5 +914,16 @@ if __name__ == '__main__':  # TODO: update guesses argument
         par('Exiting aspgen V{0}'.format(__version__).center(79) + os.linesep,
             report=args.report)
         par('-' * 79 + os.linesep, report=args.report)
+
+    if args.encrypt:
+        chars = password_characters()
+        encrypt_password = generate_password(chars, 32)[0]
+        hash = SHA256.new()
+        hash.update(encrypt_password)
+        key = hash.digest()
+        args.encrypt.write(key)
+        args.encrypt.close()
+        encrypt_file(key, args.report, out_filename=report_name)
+        args.report.close()
 
     sys.exit(0)
