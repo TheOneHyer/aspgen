@@ -75,7 +75,7 @@ __license__ = 'GPLv3'
 __maintainer__ = 'Alex Hyer'
 __credits__ = 'Eli Bendersky, Generic Human'
 __status__ = 'Beta'
-__version__ = '0.0.1rc3'
+__version__ = '0.0.1rc4'
 
 
 # http://eli.thegreenplace.net/2010/06/25/
