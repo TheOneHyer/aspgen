@@ -19,11 +19,13 @@ from pkg_resources import resource_stream
 from prettytable import PrettyTable
 import random
 import re
+import resource
 from SecureString import clearmem
 import cStringIO
 import struct
 import sys
 import textwrap
+from time import sleep
 
 __author__ = 'Alex Hyer'
 __email__ = 'theonehyer@gmail.com'
@@ -31,7 +33,7 @@ __license__ = 'GPLv3'
 __maintainer__ = 'Alex Hyer'
 __credits__ = 'Generic Human'
 __status__ = 'Beta'
-__version__ = '0.0.1b5'
+__version__ = '0.0.1b6'
 
 
 # TODO: Reformat these functions in my style
@@ -753,6 +755,11 @@ if __name__ == '__main__':  # TODO: update guesses argument
                         type=argparse.FileType('w'),
                         help='generate runtime report, contains sensitive '
                              'data')
+    parser.add_argument('-s', '--system_entropy',
+                        default=200,
+                        type=int,
+                        help='minimum system entropy required before '
+                             'proceeding with program')
     subparsers = parser.add_subparsers(title='Tools',
                                        dest='tool')
 
@@ -763,8 +770,8 @@ if __name__ == '__main__':  # TODO: update guesses argument
                           type=float,
                           help='password guesses per second by hacker')
 
-    decoder = subparsers.add_parser('decoder',
-                                    help='Decode encrypted report file')
+    decoder = subparsers.add_parser('decrypter',
+                                    help='Decrypt encrypted report file')
     decoder.add_argument('report_file',
                          type=str,
                          help='aspgen encrypted report file')
@@ -784,10 +791,6 @@ if __name__ == '__main__':  # TODO: update guesses argument
                                default=5,
                                type=int,
                                help='minimum length word to use in password')
-    dict_analyzer.add_argument('-t', '--detailed',
-                               action='store_true',
-                               help='produce detailed password stats, '
-                                    'interpret results with a grain of salt')
     dict_analyzer.add_argument('-x', '--max_length',
                                default=999,
                                type=int,
@@ -856,9 +859,26 @@ if __name__ == '__main__':  # TODO: update guesses argument
                            help='permit uppercase letters in password')
     args = parser.parse_args()
 
-    # TODO: add security settings
+    # Security Settings
+    resource.RLIMIT_CORE = 0  # Prevent core dumps
+    entropy = 'Unavailable'
+    try:
+        entropy = open('/proc/sys/kernel/random/entropy_avail', 'r').read()
+        entropy = int(entropy.strip())
+    except IOError:
+        print('Cannot read entropy from /proc/sys/kernel/random/entropy_avail')
+        entropy = 'Unavailable'
+    if entropy < args.system_entropy:
+        print('System entropy is below {0}'.format(str(args.system_entropy)))
+        print('Type commands, open applications, read files, etc. to raise')
+        print('system entropy. (Type Ctrl+C to end program)')
+    if entropy != 'Unavailable':
+        while entropy < args.system_entropy:
+            sleep(1)
+            entropy = open('/proc/sys/kernel/random/entropy_avail', 'r').read()
+            entropy = int(entropy.strip())
 
-    if args.tool == 'decoder':
+    if args.tool == 'decrypter':
         key = args.key_file.read()
         args.key_file.close()
         print(decrypt_file(key, args.report_file))
@@ -901,7 +921,10 @@ if __name__ == '__main__':  # TODO: update guesses argument
         par(os.linesep, report=args.report)
         par('Environmental Data' + os.linesep, report=args.report)
         par('------------------' + os.linesep, report=args.report)
-        # TODO: Fill in this section
+        par(os.linesep, report=args.report)
+        par('Core Dumps: Disabled' + os.linesep, report=args.report)
+        par('System Entropy: ' + str(entropy) + os.linesep,
+            report=args.report)
         par(os.linesep, report=args.report)
         par('Password' + os.linesep, report=args.report)
         par('--------' + os.linesep, report=args.report)
