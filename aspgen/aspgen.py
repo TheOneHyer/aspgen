@@ -1,13 +1,55 @@
 #! /usr/bin/env python
 
+"""A Secure Password GENerator (aspgen)
+
+aspgen is a password generation and analysis program. It both generates
+secure passwords using cryptographically secure methods and secure the
+Python interpreter environment as much as possible to mitigate password
+acquisition by malicious software.
+
+Full details are available in README.md available on GitHub at:
+
+https://github.com/TheOneHyer/aspgen
+
+or via:
+
+aspgen readme
+
+A brief synopsis of each function is provided here:
+
+generator: generate secure password
+
+analyzer: analyze user-given password
+
+dict_generator: generate secure dictionary password
+
+dict_analyzer: analyze user-given dictionary password
+
+decrypter: decrypt encrypted report file
+
+readme: print README.md and exit
+
+Copyright:
+    aspgen.py Generate and analyze secure passwords in a secure manner
+    Copyright (C) 2016  Alex Hyer
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+"""
+
 from __future__ import division
 from __future__ import print_function
 from __future__ import with_statement
-
-"""A Secure Password GENerator
-
-
-"""
 
 import argparse
 from Crypto.Cipher import AES
@@ -31,34 +73,28 @@ __author__ = 'Alex Hyer'
 __email__ = 'theonehyer@gmail.com'
 __license__ = 'GPLv3'
 __maintainer__ = 'Alex Hyer'
-__credits__ = 'Generic Human'
+__credits__ = 'Eli Bendersky, Generic Human'
 __status__ = 'Beta'
-__version__ = '0.0.1b6'
+__version__ = '0.0.1rc1'
 
 
-# TODO: Reformat these functions in my style
 # http://eli.thegreenplace.net/2010/06/25/
 # aes-encryption-of-files-in-python-with-pycrypto
 def encrypt_file(key, stringio_file, out_filename=None, chunksize=64*1024):
-    """ Encrypts a file using AES (CBC mode) with the
-        given key.
+    """Encrypts an in-memory file using AES (CBC mode) with the given key
 
-        key:
-            The encryption key - a string that must be
-            either 16, 24 or 32 bytes long. Longer keys
-            are more secure.
+    Args:
+        key (str): encryption key, a 16, 24 or 32 byte long string, Longer keys
+                   are more secure.
 
-        in_filename:
-            Name of the input file
+        stringio_file (StringIO): StringIO memory file to encrypt
 
-        out_filename:
-            If None, '<in_filename>.enc' will be used.
+        out_filename (str): out file to write encrypted data
 
-        chunksize:
-            Sets the size of the chunk which the function
-            uses to read and encrypt the file. Larger chunk
-            sizes can be faster for some files and machines.
-            chunksize must be divisible by 16.
+        chunksize (int): size of the chunk which the function uses to read
+                         and encrypt the file. Larger chunk sizes can be
+                         faster for some files and machines.
+                         chunksize must be divisible by 16.
     """
 
     iv = ''.join(chr(random.randint(0, 0xFF)) for i in range(16))
@@ -69,6 +105,7 @@ def encrypt_file(key, stringio_file, out_filename=None, chunksize=64*1024):
         outfile.write(struct.pack('<Q', filesize))
         outfile.write(iv)
 
+        # "read" and chunk StringIO contents
         contents = stringio_file.getvalue()
         content_list = []
         last_postition = 0
@@ -81,6 +118,7 @@ def encrypt_file(key, stringio_file, out_filename=None, chunksize=64*1024):
             last_postition += chunksize
         content_list = filter(None, content_list)
 
+        # Pad small chunks and encrypt them
         for chunk in content_list:
             if len(chunk) == 0:
                 break
@@ -90,16 +128,25 @@ def encrypt_file(key, stringio_file, out_filename=None, chunksize=64*1024):
             outfile.write(encryptor.encrypt(chunk))
 
 
-def decrypt_file(key, in_filename, out_filename=None, chunksize=24*1024):
-    """ Decrypts a file using AES (CBC mode) with the
-        given key. Parameters are similar to encrypt_file,
-        with one difference: out_filename, if not supplied
-        will be in_filename without its last extension
-        (i.e. if in_filename is 'aaa.zip.enc' then
-        out_filename will be 'aaa.zip')
+def decrypt_file(key, in_file, chunksize=24 * 1024):
+    """Decrypts a file using AES (CBC mode) with the given key
+
+    Args:
+        key (str): decryption key, a 16, 24 or 32 byte long string, Longer keys
+                   are more secure.
+
+        in_file (str): encrypted file to read
+
+        chunksize (int): size of the chunk which the function uses to read
+                         and decrypt the file. Larger chunk sizes can be
+                         faster for some files and machines.
+                         chunksize must be divisible by 16.
+
+    Returns:
+        str: decrypted data from file
     """
 
-    with open(in_filename, 'rb') as infile:
+    with open(in_file, 'rb') as infile:
         origsize = struct.unpack('<Q', infile.read(struct.calcsize('Q')))[0]
         iv = infile.read(16)
         decryptor = AES.new(key, AES.MODE_CBC, iv)
@@ -245,7 +292,7 @@ def par(message, to_print=False, report=None):
     if report is not None:
         report.write(message)
     if to_print is True:
-        if message.endswith(os.linesep):
+        if message.endswith(os.linesep):  # Remove os.linesep at end of message
             message = re.sub(os.linesep + '$', '', message)
         print(message)
 
@@ -516,7 +563,7 @@ def print_stats(combinations, entropy):
         entropy (float): entropy of password
 
     Returns:
-        tuple: two strings holding formatted output
+        tuple: two strings holding formatted output ready for printing
 
     Example:
         >>> a, b = print_stats(10000, 97.235)
@@ -602,7 +649,7 @@ def main(args):
                 num_chars += len(special_chars)
             par(os.linesep, report=args.report)
 
-        # Analyze password and present stats
+        # Analyze password and par stats
         if args.tool == 'analyzer' or args.stats is True:
             par('Password Stats' + os.linesep, report=args.report)
             par('--------------' + os.linesep, report=args.report)
@@ -742,7 +789,7 @@ def main(args):
         clearmem(password)
 
 
-if __name__ == '__main__':  # TODO: update guesses argument
+if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.
                                      RawDescriptionHelpFormatter)
@@ -857,7 +904,27 @@ if __name__ == '__main__':  # TODO: update guesses argument
     generator.add_argument('-u', '--upper_letters',
                            action='store_true',
                            help='permit uppercase letters in password')
+
+    readme = subparsers.add_parser('readme',
+                                   help='print README.md and exit')
+
     args = parser.parse_args()
+
+    # Print README.md and exit
+    if args.tool == 'readme':
+        with resource_stream('aspgen', 'README.md') as in_handle:
+            for line in in_handle:
+                print(line)
+        sys.exit(0)
+
+    # Decrypt file and exit
+    if args.tool == 'decrypter':
+        key = args.key_file.read()
+        args.key_file.close()
+        print(decrypt_file(key, args.report_file))
+        sys.exit(0)
+
+    # Begin actual password generation and analysis portion of program
 
     # Security Settings
     resource.RLIMIT_CORE = 0  # Prevent core dumps
@@ -877,12 +944,6 @@ if __name__ == '__main__':  # TODO: update guesses argument
             sleep(1)
             entropy = open('/proc/sys/kernel/random/entropy_avail', 'r').read()
             entropy = int(entropy.strip())
-
-    if args.tool == 'decrypter':
-        key = args.key_file.read()
-        args.key_file.close()
-        print(decrypt_file(key, args.report_file))
-        sys.exit(0)
 
     if args.encrypt is not None:
         try:
