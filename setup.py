@@ -24,7 +24,7 @@ Copyright:
 from setuptools import setup
 
 setup(name='aspgen',
-      version='0.0.1rc2',
+      version='0.0.1rc3',
       description='A Secure Password GENerator',
       classifiers=[
           'Development Status :: 4 - Beta',
@@ -37,14 +37,18 @@ setup(name='aspgen',
       ],
       keywords='secure password generator',
       url='https://github.com/TheOneHyer/aspgen',
-      download_url='https://github.com/TheOneHyer/aspgen/tarball/0.0.1rc2',
+      download_url='https://github.com/TheOneHyer/aspgen/tarball/0.0.1rc3',
       author='Alex Hyer',
       author_email='theonehyer@gmail.com',
       license='GPLv3',
       packages=['aspgen'],
       include_package_data=True,
       zip_safe=False,
-      scripts=['aspgen/aspgen.py'],
+      entry_points={
+          'console_scripts': [
+              'aspgen = aspgen.aspgen:entry'
+          ]
+      },
       requires=[
           'Crypto',
           'prettytable',

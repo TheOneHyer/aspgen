@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python2.7
 
 """A Secure Password GENerator (aspgen)
 
@@ -75,7 +75,7 @@ __license__ = 'GPLv3'
 __maintainer__ = 'Alex Hyer'
 __credits__ = 'Eli Bendersky, Generic Human'
 __status__ = 'Beta'
-__version__ = '0.0.1rc2'
+__version__ = '0.0.1rc3'
 
 
 # http://eli.thegreenplace.net/2010/06/25/
@@ -789,7 +789,9 @@ def main(args):
         clearmem(password)
 
 
-if __name__ == '__main__':
+def entry():
+    """Entry point for console_scripts and called if __name__ == __main__"""
+
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.
                                      RawDescriptionHelpFormatter)
@@ -973,7 +975,7 @@ if __name__ == '__main__':
         par('----------' + os.linesep, report=args.report)
         par(os.linesep, report=args.report)
         lines = textwrap.wrap('Command: {0}'.format(
-                                             os.linesep.join(sys.argv[:])), 79)
+            os.linesep.join(sys.argv[:])), 79)
         for line in lines:
             par(line + os.linesep, report=args.report)
         for arg in vars(args):
@@ -1011,3 +1013,7 @@ if __name__ == '__main__':
         args.report.close()
 
     sys.exit(0)
+
+
+if __name__ == '__main__':
+    entry()
