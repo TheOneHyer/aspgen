@@ -5,12 +5,18 @@
 2. [Installation](#Install)
 3. [Usage](#Usage)
     * [HELP!](#HELP!)
-    * [Generator](#Generator)
     * [Global Arguments](#Global-Arguments)
+    * [Generator](#Generator)
     * [Analyzer](#Analyzer)
     * [Dictionary Generator](#Dictionary-Generator)
     * [Dictionary Analyzer](#Dictionary-Analyzer)
     * [Decrypter](#Decrypter)
+4. [Examples](#Examples)
+    * [Generator Examples](#Generator-Examples)
+    * [Analzyer Example](#Analyzer-Example)
+    * [Dictionary Generator Examples](#Dictionary-Generator-Examples)
+    * [Dictionary Analzyer Example](#Dictionary-Analyzer-Example)
+    * [Decrypter Example](#Decrypter-Example)
 
 ## Introduction
 
@@ -179,3 +185,53 @@ takes and encrypted report file and its associated key in order to
 read the report file and print it to the terminal screen:
 
 `aspgen decrypter <report file> <key file>`
+
+## Examples
+
+The following examples demonstrate how to use aspgen. They all use the
+shorthand notation of flags:
+
+### Generator Examples
+
+* Generate a password containing all letters and numbers that is 12
+  characters long:
+    - `aspgen generator -l 12 -p`
+    
+* Generate a password with lowercase letters and special characters
+  that is 15 characters long and calculate statistics on it:
+    - `aspgen generator -l 15 -o -n -t`
+    
+* Generate a password using all characters, calculate statistics,
+  guess the longevity of the password, and save an encrypted report:
+    - `aspgen -e report.key -r report generator -a -g 0 -t`
+    
+### Analyzer Example
+
+* Analyze a user-given password, guess password hacking times, and print
+  report:
+    - `aspgen -r report.txt analyzer -g 10000000 250000000`
+    
+### Dictionary Generator Examples
+
+* Generate a dictionary password containing five words of five letters
+  or larger:
+    - `aspgen dict_generator -l 5 -m 5`
+    
+* Generate a dictionary password containing four words of three letters
+  or fewer and calculate statistics:
+    - `aspgen dict_generator -l 4 -x 3 -t`
+    
+* Generate a dictionary password using most words in the English
+  language of six or greater letters, calculate statistics, guess
+  hacking speed, and save adn encrypted report:
+    - `aspgen -e report.key -r report dict_generator -u -m 6 -g 0 -t`
+    
+## Dictionary Analyzer Example
+
+* Analyze a user-given dictionary password and save report:
+    - `aspgen -r report dict_analyzer`
+    
+## Decrypter Example
+
+* Decrypt an encrypted report file:
+    - `aspgen decrypter report report.key`
