@@ -75,7 +75,7 @@ __license__ = 'GPLv3'
 __maintainer__ = 'Alex Hyer'
 __credits__ = 'Eli Bendersky, Generic Human'
 __status__ = 'Beta'
-__version__ = '0.0.1rc5'
+__version__ = '0.0.1rc6'
 
 
 # http://eli.thegreenplace.net/2010/06/25/
@@ -948,32 +948,36 @@ def entry():
 
     # Security Settings
     resource.RLIMIT_CORE = 0  # Prevent core dumps
-    entropy = 'Unavailable'
-    try:
-        entropy = open('/proc/sys/kernel/random/entropy_avail', 'r').read()
-        entropy = int(entropy.strip())
-    except IOError:
-        print('Cannot read entropy from /proc/sys/kernel/random/entropy_avail')
+    if args.tool == 'generator' or args.tool == 'dict_generator':
         entropy = 'Unavailable'
-    if entropy < args.system_entropy:
-        print('System entropy is below {0}'.format(str(args.system_entropy)))
-        print('Type commands, open applications, read files, etc. to raise')
-        print('system entropy. (Type Ctrl+C to end program)')
-    if entropy != 'Unavailable':
-        while entropy < args.system_entropy:
-            sleep(1)
+        try:
             entropy = open('/proc/sys/kernel/random/entropy_avail', 'r').read()
             entropy = int(entropy.strip())
+        except IOError:
+            print('Cannot read entropy from '
+                  '/proc/sys/kernel/random/entropy_avail')
+            entropy = 'Unavailable'
+        if entropy < args.system_entropy:
+            print('System entropy is below {0}'
+                  .format(str(args.system_entropy)))
+            print('Type commands, open applications, read files, etc. to raise')
+            print('system entropy. (Type Ctrl+C to end program)')
+        if entropy != 'Unavailable':
+            while entropy < args.system_entropy:
+                sleep(1)
+                entropy = open('/proc/sys/kernel/random/entropy_avail', 'r')\
+                          .read()
+                entropy = int(entropy.strip())
 
-    if args.encrypt is not None:
-        try:
-            assert args.report is not None
-        except AssertionError:
-            raise AssertionError('--encrypt requires --report')
-        report_name = args.report.name
-        args.report.close()
-        args.report = cStringIO.StringIO()
-        report_file = open(report_name, 'w')  # Need to open before 'w' gone
+        if args.encrypt is not None:
+            try:
+                assert args.report is not None
+            except AssertionError:
+                raise AssertionError('--encrypt requires --report')
+            report_name = args.report.name
+            args.report.close()
+            args.report = cStringIO.StringIO()
+            report_file = open(report_name, 'w')  # Need to open before 'w' gone
 
     # Easter Egg
     # 3.5e+8: gizmodo/5966169/the-hardware-hackers-use-to-crack-your-passwords

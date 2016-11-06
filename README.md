@@ -21,6 +21,7 @@
 5. [Theory and Implementation](#theory-and-implementation)
     * [Password Security](#password-security)
     * [Dictionary Passwords](#dictionary-passwords)
+    * [Environmental Security](#environmental-security)
 
 ## Introduction
 
@@ -355,3 +356,38 @@ memorization and should thus be used where possible. In some situations,
 such as many online account passwords, your password length is too
 limited to permit dictionary passwords, and thus favor "traditional"
 passwords. However, in general, I recommend dictionary passwords.
+
+### Enviromental Security
+
+A powerful password is useless if a hacker obtains it when you generate
+it. To prevent hackers on your system from obtaining your password,
+aspgen secures its runtime environment to potential attacks. This is
+accomplished by:
+
+1. Disabling Core Dumps: Core dumps are files written to disk of your
+                         program's data when it crashes. In aspgen, this
+                         data includes your password. By disabling the
+                         core dump, your password will never be written
+                         to disk for hackers to view in case aspgen
+                         dies.
+                         
+2. Ensure Minimum Entropy: All widely used operating systems have ways
+                           to generate randomness. Using this randomness
+                           to perform operations "consumes" it. If the
+                           system entropy is too low, processes relying
+                           on it will cease to be random. aspgen ensures
+                           the system entropy is sufficient to generate
+                           a password before proceeding with password
+                           generation.
+                           
+3. Encrypting Report: The report file created by aspgen contains the
+                      password generated or analyzed. To prevent hackers
+                      from reading this file, aspgen can encrypt the
+                      file in memory before writing it to the disk.
+                      
+I also attempted to prevent aspgen from paging memory so that data never
+ends up on the disk but any attempts to do so with the kernel calls
+mlock() and mlockall() were unsuccessful. Since aspgen tends to use
+40 MB of memory at greatest, paging should rarely be issue, but still
+exists. Fixing this may require a C++ wrapper for aspgen or simply
+reqriting aspgen in C++.
