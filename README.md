@@ -1,26 +1,26 @@
 #aspgen
 
 ## Table of Contents
-1. [Introduction](#Introduction)
-2. [Installation](#Install)
-3. [Usage](#Usage)
-    * [HELP!](#HELP!)
-    * [Global Arguments](#Global-Arguments)
-    * [Generator](#Generator)
-    * [Analyzer](#Analyzer)
-    * [Dictionary Generator](#Dictionary-Generator)
-    * [Dictionary Analyzer](#Dictionary-Analyzer)
-    * [Decrypter](#Decrypter)
-4. [Examples](#Examples)
-    * [README Examples](#README-Examples)
-    * [Generator Examples](#Generator-Examples)
-    * [Analzyer Example](#Analyzer-Example)
-    * [Dictionary Generator Examples](#Dictionary-Generator-Examples)
-    * [Dictionary Analzyer Example](#Dictionary-Analyzer-Example)
-    * [Decrypter Example](#Decrypter-Example)
-5. [Theory and Implementation](#Theory-and-Implementation)
-    * [Password Security](#Password-Security)
-    * [Dictionary Passwords](#Dictionary-Passwords)
+1. [Introduction](#introduction)
+2. [Installation](#install)
+3. [Usage](#usage)
+    * [HELP!](#help!)
+    * [Global Arguments](#global-arguments)
+    * [Generator](#generator)
+    * [Analyzer](#analyzer)
+    * [Dictionary Generator](#dictionary-generator)
+    * [Dictionary Analyzer](#dictionary-analyzer)
+    * [Decrypter](#decrypter)
+4. [Examples](#examples)
+    * [README Examples](#readme-examples)
+    * [Generator Examples](#generator-examples)
+    * [Analzyer Example](#analyzer-example)
+    * [Dictionary Generator Examples](#dictionary-generator-examples)
+    * [Dictionary Analzyer Example](#dictionary-analyzer-example)
+    * [Decrypter Example](#decrypter-example)
+5. [Theory and Implementation](#theory-and-implementation)
+    * [Password Security](#password-security)
+    * [Dictionary Passwords](#dictionary-passwords)
 
 ## Introduction
 
@@ -321,6 +321,6 @@ In summary, secure passwords are random, long, and "complex". aspgen
 always generates random passwords and the user has the power to control
 password length and character set.
 
-## Dictionary Passwords
+### Dictionary Passwords
 
 
