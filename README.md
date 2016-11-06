@@ -20,6 +20,7 @@
     * [Decrypter Example](#Decrypter-Example)
 5. [Theory and Implementation](#Theory-and-Implementation)
     * [Password Security](#Password-Security)
+    * [Dictionary Passwords](#Dictionary-Passwords)
 
 ## Introduction
 
@@ -319,3 +320,7 @@ effective minimum time to guess a password for most realistic scenarios.
 In summary, secure passwords are random, long, and "complex". aspgen
 always generates random passwords and the user has the power to control
 password length and character set.
+
+## Dictionary Passwords
+
+
