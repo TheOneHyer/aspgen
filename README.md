@@ -18,6 +18,7 @@
     * [Dictionary Generator Examples](#Dictionary-Generator-Examples)
     * [Dictionary Analzyer Example](#Dictionary-Analyzer-Example)
     * [Decrypter Example](#Decrypter-Example)
+5. [Theory and Implementation](#Theory-and-Implementation)
 
 ## Introduction
 
@@ -242,12 +243,18 @@ shorthand notation of flags:
   hacking speed, and save adn encrypted report:
     - `aspgen -e report.key -r report dict_generator -u -m 6 -g 0 -t`
     
-## Dictionary Analyzer Example
+### Dictionary Analyzer Example
 
 * Analyze a user-given dictionary password and save report:
     - `aspgen -r report dict_analyzer`
     
-## Decrypter Example
+### Decrypter Example
 
 * Decrypt an encrypted report file:
     - `aspgen decrypter report report.key`
+    
+## Theory and Implementation
+
+This section details the theory behind password security, password
+generation, and how these concepts influence aspgen's design.
+
