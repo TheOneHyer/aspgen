@@ -22,6 +22,7 @@
     * [Password Security](#password-security)
     * [Dictionary Passwords](#dictionary-passwords)
     * [Environmental Security](#environmental-security)
+6. [Inspiration](#inspiration)
 
 ## Introduction
 
@@ -391,3 +392,16 @@ mlock() and mlockall() were unsuccessful. Since aspgen tends to use
 40 MB of memory at greatest, paging should rarely be issue, but still
 exists. Fixing this may require a C++ wrapper for aspgen or simply
 reqriting aspgen in C++.
+
+## Inspiration
+
+aspgen was inspired by a surprising lack of good, safe, easily
+accessible, open-source password generators. Some programs have built-in
+password generators of some kind, but not as standalone programs that
+also give users the statistics needed to ensure their password is
+secure. There are also many online password generators, but browsers
+may not be secure on either the client side (browser software hacked)
+or server side (website code maliciously stores and retrieves your
+password). Still more password generating software costs money. In
+essence, secure password generation doesn't exist in a user friendly
+manner and thus aspgen was born.
