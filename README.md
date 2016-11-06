@@ -19,6 +19,7 @@
     * [Dictionary Analzyer Example](#Dictionary-Analyzer-Example)
     * [Decrypter Example](#Decrypter-Example)
 5. [Theory and Implementation](#Theory-and-Implementation)
+    * [Password Security](#Password-Security)
 
 ## Introduction
 
