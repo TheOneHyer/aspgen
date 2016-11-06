@@ -12,6 +12,7 @@
     * [Dictionary Analyzer](#Dictionary-Analyzer)
     * [Decrypter](#Decrypter)
 4. [Examples](#Examples)
+    * [README Examples](#README-Examples)
     * [Generator Examples](#Generator-Examples)
     * [Analzyer Example](#Analyzer-Example)
     * [Dictionary Generator Examples](#Dictionary-Generator-Examples)
@@ -58,6 +59,10 @@ readme and exits. The tool can be accessed via:
 
 `aspgen readme`
 
+readme also includes a '--header' option to only print a section of this
+readme corresponding to given header.
+See [README Examples](#README-Examples).
+
 ### Global Arguments
 
 There are three "global" arguments in aspgen. Each such argument and
@@ -91,7 +96,7 @@ ASCII characters are permitted in the password*):
 
 --all: Permit lowercase and uppercase letters, numbers, and special
        characters in the password. Specifying any of the four arguments
-       for the above character sets negates this flag. [Default]
+       for the above character sets negates this flag. \[Default\]
        
 --alphanumeric: Permit lowercase and uppercase letters and numbers in
                 generated password.
@@ -105,7 +110,7 @@ ASCII characters are permitted in the password*):
                        required to guess the password at each speed.
                        Entering `--guess_speed 0` defaults to 
                        `--guess_speeds 3.4e+8 4.0e+12 1.0e+16`
-                       which represent some representative guess speeds
+                       which are representative guess speeds
                        of gaming computes, AntMiner S7, and a putative
                        NSA speed respectively. Does nothing if
                        --stats is not specified.
@@ -190,6 +195,17 @@ read the report file and print it to the terminal screen:
 
 The following examples demonstrate how to use aspgen. They all use the
 shorthand notation of flags:
+
+### README Examples:
+
+* Print of all of README to screen:
+    - `aspgen readme`
+    
+* Print everything under [Usage](#Usage) including subsections:
+    - `aspgen readme --header usage`
+    
+* Only print this subsection (*note: quotes permit spaces in request*):
+    - `aspgen readme --header 'readme examples'`
 
 ### Generator Examples
 

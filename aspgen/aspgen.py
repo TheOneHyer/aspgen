@@ -75,7 +75,7 @@ __license__ = 'GPLv3'
 __maintainer__ = 'Alex Hyer'
 __credits__ = 'Eli Bendersky, Generic Human'
 __status__ = 'Beta'
-__version__ = '0.0.1rc4'
+__version__ = '0.0.1rc5'
 
 
 # http://eli.thegreenplace.net/2010/06/25/
@@ -909,14 +909,32 @@ def entry():
 
     readme = subparsers.add_parser('readme',
                                    help='print README.md and exit')
+    readme.add_argument('-e', '--header',
+                        required=False,
+                        default=None,
+                        type=str,
+                        help='only print README section defined by header')
 
     args = parser.parse_args()
 
     # Print README.md and exit
     if args.tool == 'readme':
         with resource_stream('aspgen', 'README.md') as in_handle:
+            to_print = True if args.header is None else False
+            header_depth = None
             for line in in_handle:
-                print(line)
+                if line[0] == '#' and args.header is not None:
+                    header = line.split(' ', 1)[-1]
+                    # Start printing at matching header
+                    if header.strip().lower() == args.header.lower():
+                        to_print = True
+                        header_depth = line.count('#')
+                    # Stop reading and printing at next header of equal depth
+                    elif header_depth is not None and \
+                            line.count('#') == header_depth:
+                        break
+                if to_print is True:
+                    print(line.strip())
         sys.exit(0)
 
     # Decrypt file and exit
