@@ -4,7 +4,7 @@
 1. [Introduction](#introduction)
 2. [Installation](#install)
 3. [Usage](#usage)
-    * [HELP!](#help!)
+    * [HELP!](#help)
     * [Global Arguments](#global-arguments)
     * [Generator](#generator)
     * [Analyzer](#analyzer)
@@ -64,7 +64,7 @@ readme and exits. The tool can be accessed via:
 
 readme also includes a '--header' option to only print a section of this
 readme corresponding to given header.
-See [README Examples](#README-Examples).
+See [README Examples](#readme-examples).
 
 ### Global Arguments
 
@@ -204,7 +204,7 @@ shorthand notation of flags:
 * Print of all of README to screen:
     - `aspgen readme`
     
-* Print everything under [Usage](#Usage) including subsections:
+* Print everything under [Usage](#usage) including subsections:
     - `aspgen readme --header usage`
     
 * Only print this subsection (*note: quotes permit spaces in request*):
@@ -323,4 +323,35 @@ password length and character set.
 
 ### Dictionary Passwords
 
+The internet is full of contention concerning the security of dictionary
+passwords. Some argue that dictionary passwords are secure due to their
+(normally) long length and ease of human memorization: preventing
+insecure practices such as writing passwords. Others detest dictionary
+passwords as they permit hackers to use a dictionary attack: simply
+guessing combinations of words in the dictionary rather than all
+possible characters.
 
+Luckily, simple math solves this dilemma. When using a list of words to
+generate a password, each word becomes a "character" than can be
+randomly selected and the "length" of the password is simply the number
+of words used in the password. Thus:
+
+password combinations = (words in list) ^ (words in password)
+
+which should be familiar. Most secure dictionary passwords use five to
+seven words which is roughly half the length of most secure
+"traditional" passwords but the number of words in a list can far
+exceed the number of ASCII characters. The large base results in a
+very secure password that is also easy for humans to memorize. As an
+example, a six word password made from a 10,000 word list has an
+entropy of 79.73, while a password 12 letter password made from from all
+95 printable ASCII characters has an entropy of 78.84. Thus, the
+dictionary password is more secure and will always be easier to
+memorize. aspgen will inform you if your dictionary password is so small
+that it is easier to hack via brute force attack than dictionary attack.
+
+In summary, dictionary passwords are far stronger for their ease of
+memorization and should thus be used where possible. In some situations,
+such as many online account passwords, your password length is too
+limited to permit dictionary passwords, and thus favor "traditional"
+passwords. However, in general, I recommend dictionary passwords.
