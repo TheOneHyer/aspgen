@@ -23,6 +23,7 @@
     * [Dictionary Passwords](#dictionary-passwords)
     * [Environmental Security](#environmental-security)
 6. [Inspiration](#inspiration)
+7. [Roadmap](#roadmap)
 
 ## Introduction
 
@@ -44,7 +45,7 @@ systems*
 
 ## Usage
 
-aspgen aims to be intuitive and simple such that you hopefully won't
+aspgen aims to be intuitive and simple enough that you hopefully won't
 even need to read this README (though you still should). In general,
 aspgen consists of a series of tools following the `aspgen` command as
 follows:
@@ -66,7 +67,7 @@ readme and exits. The tool can be accessed via:
 
 readme also includes a '--header' option to only print a section of this
 readme corresponding to given header.
-See [README Examples](#readme-examples).
+See [README Examples](#readme-examples) for '--header' examples.
 
 ### Global Arguments
 
@@ -74,21 +75,21 @@ There are three "global" arguments in aspgen. Each such argument and
 the tools they apply to are provided:
 
 --encrypt \<key file\>: Applies to both generator and analyzer tools.
-                      Encrypts report file (see below) and creates the
-                      key file to decrypt the report file. The AES256
-                      algorithm is used to perform encryption.
+                        Encrypts report file (see below) and creates the
+                        key file to decrypt the report file. The AES256
+                        algorithm is used to perform encryption.
                       
 --report \<report file\>: Applies to both generator and analyzer tools.
-                        Writes detailed report to report file containing
-                        the password, password statistics, and various
-                        runtime data.
+                          Writes detailed report to report file
+                          containing the password, password statistics,
+                          and various runtime data.
                         
 --system_entropy \<integer\>: Only applies to generator tools. 
-                            Minimum system entropy required before
-                            aspgen will generate a password. If syst bem
-                            entropy is below this level, aspgen will
-                            sleep until entropy is high enough to
-                            generate a password.
+                              Minimum system entropy required before
+                              aspgen will generate a password. If system
+                              entropy is below this level, aspgen will
+                              sleep until entropy is high enough to
+                              generate a password.
 
 ### Generator
 
@@ -199,14 +200,14 @@ read the report file and print it to the terminal screen:
 ## Examples
 
 The following examples demonstrate how to use aspgen. They all use the
-shorthand notation of flags:
+shorthand notation of flags (available via '--help'):
 
 ### README Examples:
 
 * Print of all of README to screen:
     - `aspgen readme`
     
-* Print everything under [Usage](#usage) including subsections:
+* Print everything under [Usage](#usage), including subsections:
     - `aspgen readme --header usage`
     
 * Only print this subsection (*note: quotes permit spaces in request*):
@@ -244,7 +245,7 @@ shorthand notation of flags:
     
 * Generate a dictionary password using most words in the English
   language of six or greater letters, calculate statistics, guess
-  hacking speed, and save adn encrypted report:
+  hacking speed, and save and encrypted report:
     - `aspgen -e report.key -r report dict_generator -u -m 6 -g 0 -t`
     
 ### Dictionary Analyzer Example
@@ -270,7 +271,8 @@ to improve any given password's security, e.g. limiting password entries
 per second or limiting total allowable password guesses, there is no
 substitute for a strong password. This problem is compounded when
 working in environments where a hacker's password cracking speed is
-only limited by their hardware.
+only limited by their hardware as specialized hardware can guess
+trillions of password hashes (semi-encrypted passwords) per second.
 
 A secure password is simply a password that is harder/takes longer
 to guess. In the worst-case scenario for a hacker, he or she will simply
@@ -282,11 +284,11 @@ A password must be constructed by choosing characters at complete
 random to guarantee a hacker must resort to a brute fore attack.
 Passwords generated via heuristics such as using sequences of letters
 or numbers, using words relevant to your life, or altering words with
-leet are inherently weak as they give hackers a method to quickly guess
+l33t are inherently weak as they give hackers a method to quickly guess
 your password. For secure passwords, only completely random passwords
 suffice. As such, aspgen generates passwords by randomly selecting
 each character or word of your password from a set of available
-characters using your operating system's entropy generator.
+characters/words using your operating system's entropy generator.
 
 Once a hacker resorts to brute force attack, the security of a password
 relies on the possible number of passwords generated by a given method.
@@ -310,14 +312,16 @@ randomly generated password of X possible possible combinations assumes
 an uniform distribution. Thus, on average, guessing any single password
 requires guessing half of all possible password combinations.
 Ultimately, this means that guessing any single password requires enough
-time to guess half the passwords. So, the time to guess a password is:
+time to guess half of all possible password combinations. So, the time
+to guess a password is:
 
 time to guess = (password combinations) / 2 / (password guesses / sec)
 
 This calculation assumes that a hacker knows your exact number of
-password combinations and thus both the exact length and character set
+password combinations, and thus both the exact length and character set
 of your password. As a result, this calculation can be thought of as an
-effective minimum time to guess a password for most realistic scenarios.
+effective minimum time (on average) to guess a password for most
+realistic scenarios.
 
 In summary, secure passwords are random, long, and "complex". aspgen
 always generates random passwords and the user has the power to control
@@ -346,11 +350,36 @@ seven words which is roughly half the length of most secure
 exceed the number of ASCII characters. The large base results in a
 very secure password that is also easy for humans to memorize. As an
 example, a six word password made from a 10,000 word list has an
-entropy of 79.73, while a password 12 letter password made from from all
-95 printable ASCII characters has an entropy of 78.84. Thus, the
+entropy of 79.73, while an eight character password made from from all
+95 printable ASCII characters has an entropy of 52.56. Thus, the
 dictionary password is more secure and will always be easier to
 memorize. aspgen will inform you if your dictionary password is so small
 that it is easier to hack via brute force attack than dictionary attack.
+
+A brief example of why dictionary passwords are easy to memorize is in
+order. This is a traditional, eight character password:
+
+"+Jx*OMv
+
+and here is a seven word dictionary password:
+
+Words: register joiner bloated debauch automotive cupola ballot
+Password: registerjoinerbloateddebauchautomotivecupolaballot
+
+The traditional password is hard to memorize and easy to forget. The
+dictionary password is easy to remember because one can make a sentence
+or acronym out of it, e.g.
+
+A person wants to REGISTER to become of JOINER of BLOATED dancer to
+DEBAUCH AUTOMOTIVE owned CUPOLA's for voting BALLOTs.
+
+or whatever else suits your fancy. Additionally, this password is very
+hard to hack as a dictionary password due to the sheer number of words
+used to generate it, and as a traditional password due to its extreme
+length (50 letters). The first password has a entropy of 52.56
+whereas the dictionary password has an entropy of 79.83 when hacked
+by a dictionary attack, and an entropy of 235.02 against a brute force
+attack.
 
 In summary, dictionary passwords are far stronger for their ease of
 memorization and should thus be used where possible. In some situations,
@@ -386,12 +415,21 @@ accomplished by:
                       from reading this file, aspgen can encrypt the
                       file in memory before writing it to the disk.
                       
+4. Clearing Memory: The moment aspgen no longer needs your password in
+                    memory, it burns a hole through the memory so as to
+                    remove all possible references to your password.
+                    This minimizes numerous possible attacks that
+                    involve gaining access to memory buffers.
+                    (This functionality limits aspgen to Python 2.7)
+                      
 I also attempted to prevent aspgen from paging memory so that data never
-ends up on the disk but any attempts to do so with the kernel calls
+ends up on the disk, but any attempts to do so with the kernel calls
 mlock() and mlockall() were unsuccessful. Since aspgen tends to use
-40 MB of memory at greatest, paging should rarely be issue, but still
-exists. Fixing this may require a C++ wrapper for aspgen or simply
-reqriting aspgen in C++.
+40 MB of memory at greatest, and completes in less than a second, paging
+should rarely be issue, but still exists. Fixing this may require a C++
+wrapper for aspgen, or simply rewriting aspgen in C++. C++ is currently
+beyond my knowledge set, but I intend to learn it eventually and
+appreciate any outside help (go open-source!).
 
 ## Inspiration
 
@@ -401,7 +439,23 @@ password generators of some kind, but not as standalone programs that
 also give users the statistics needed to ensure their password is
 secure. There are also many online password generators, but browsers
 may not be secure on either the client side (browser software hacked)
-or server side (website code maliciously stores and retrieves your
-password). Still more password generating software costs money. In
-essence, secure password generation doesn't exist in a user friendly
-manner and thus aspgen was born.
+or server side (website code maliciously stores/or and retrieves your
+password). Still more password generating software costs money--
+ridiculous. In essence, secure password generation doesn't exist in a
+user friendly manner and thus aspgen was born.
+
+## Roadmap
+
+aspgen 1.0.0 will be quite complete and well-documented. There will
+likely be no changes in the future except to add relevant statistics.
+One exception is adding Unicode support to aspgen and allow users to
+specify characters to add to or delete from the possible character set
+used for their passwords. There are current plans to develop aspgen
+2.0.0, but no time frame will be given for some time. aspgen 2.0.0 will
+sport a TUI (Text User Interface) using [URWID](http://http://urwid.org/).
+Hopefully, a TUI will make aspgen extremely intuitive and convenient.
+While I have not officially decided if I will write aspgen 3.0.0, if I
+do, it will provide an X11 windowing system for use with GUI
+(Graphical User Interfaces) systems. As an open-source project, I
+greatly appreciate all help and will give full credit to any
+contributions.
