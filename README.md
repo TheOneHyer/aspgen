@@ -176,19 +176,12 @@ A dictionary password statistics analyzer. This function only works if
 the user-provided password consists solely of the 10,000 most common
 words in the English language. aspgen will accurately guess the
 individual words in your password to calculate statistics but this is
-only possible under the aforementioned restraint. Providing
---min_length and --max_length improve this functionalities accuracy.
+only possible under the aforementioned restraint.
 aspgen's dictionary analyzer usage follows:
 
 `aspgen <global arguments> dict_analyzer <dict_analzyer arguments>`
 
 --guess_speeds: See generator --guess_speeds less last sentence.
-
---min_length \<integer\>: Maximum word length permitted in given
-                          password.
-
---min_length \<integer\>: Minimum word length permitted in given
-                          password.
                           
 ### Decrypter
 Solely as a convenience, aspgen provides a decryption function that

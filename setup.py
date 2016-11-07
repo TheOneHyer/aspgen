@@ -5,7 +5,7 @@
 Copyright:
 
     setup.py build and install aspgen PyPI package
-    Copyright (C) 2015  Alex Hyer
+    Copyright (C) 2016  Alex Hyer
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -23,8 +23,15 @@ Copyright:
 
 from setuptools import setup
 
+__author__ = 'Alex Hyer'
+__email__ = 'theonehyer@gmail.com'
+__license__ = 'GPLv3'
+__maintainer__ = 'Alex Hyer'
+__status__ = 'Beta'
+__version__ = '0.0.1rc8'
+
 setup(name='aspgen',
-      version='0.0.1rc7',
+      version='0.0.1rc8',
       description='A Secure Password GENerator',
       classifiers=[
           'Development Status :: 4 - Beta',
@@ -37,7 +44,7 @@ setup(name='aspgen',
       ],
       keywords='secure password generator',
       url='https://github.com/TheOneHyer/aspgen',
-      download_url='https://github.com/TheOneHyer/aspgen/tarball/0.0.1rc7',
+      download_url='https://github.com/TheOneHyer/aspgen/tarball/0.0.1rc8',
       author='Alex Hyer',
       author_email='theonehyer@gmail.com',
       license='GPLv3',

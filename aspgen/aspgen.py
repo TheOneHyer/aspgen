@@ -75,11 +75,12 @@ __license__ = 'GPLv3'
 __maintainer__ = 'Alex Hyer'
 __credits__ = 'Eli Bendersky, Generic Human'
 __status__ = 'Beta'
-__version__ = '0.0.1rc7'
+__version__ = '0.0.1rc8'
 
 
 # http://eli.thegreenplace.net/2010/06/25/
 # aes-encryption-of-files-in-python-with-pycrypto
+# Alex Hyer modified the code for readability
 def encrypt_file(key, stringio_file, out_filename=None, chunksize=64*1024):
     """Encrypts an in-memory file using AES (CBC mode) with the given key
 
@@ -108,14 +109,14 @@ def encrypt_file(key, stringio_file, out_filename=None, chunksize=64*1024):
         # "read" and chunk StringIO contents
         contents = stringio_file.getvalue()
         content_list = []
-        last_postition = 0
+        last_position = 0
         for i in range(len(contents) % chunksize + 1):
-            if last_postition + chunksize > len(contents):
-                content_list.append(contents[last_postition:-1])
+            if last_position + chunksize > len(contents):
+                content_list.append(contents[last_position:-1])
             else:
                 content_list.append(content_list[
-                                    last_postition:last_postition + chunksize])
-            last_postition += chunksize
+                                    last_position:last_position + chunksize])
+            last_position += chunksize
         content_list = filter(None, content_list)
 
         # Pad small chunks and encrypt them
@@ -128,6 +129,9 @@ def encrypt_file(key, stringio_file, out_filename=None, chunksize=64*1024):
             outfile.write(encryptor.encrypt(chunk))
 
 
+# http://eli.thegreenplace.net/2010/06/25/
+# aes-encryption-of-files-in-python-with-pycrypto
+# Alex Hyer modified the code for readability
 def decrypt_file(key, in_file, chunksize=24 * 1024):
     """Decrypts a file using AES (CBC mode) with the given key
 
@@ -217,7 +221,7 @@ def generate_password(chars, length, get_parts=False, secure=True):
 
 # Credit: Generic Human on StackOverflow: http://stackoverflow.com/questions/
 # 8870261/how-to-split-text-without-spaces-into-list-of-words
-# I modified the code for readability and minor speed improvements
+# Alex Hyer modified the code for readability and minor speed improvements
 def infer_spaces(string, words):
     """Infer space locations in a string without spaces
 
@@ -553,7 +557,7 @@ def password_stats(dict_pass=None, dictionary=None,
 
 
 def print_stats(combinations, entropy):
-    """Convenience wrapper to print basic password stats
+    """Convenience wrapper to format basic password stats
 
     Return formatted combination and entropy of password
 
@@ -580,7 +584,7 @@ def print_stats(combinations, entropy):
 
 
 def main(args):
-    """Control program flow based on arguments
+    """Control program flow based on arguments. See --help and README for args
 
     Args:
         args (ArgumentParser): argparse ArgumentParser class
@@ -590,10 +594,12 @@ def main(args):
 
         if args.tool == 'generator':
 
+            # Disable --all if any other flag is given
             if args.lower_letters is True or args.upper_letters is True or \
                     args.special_characters is True or args.numbers is True:
                 args.all = False
 
+            # Modify flags to make --alphanumeric work, overrides all flags
             if args.alphanumeric is True:
                 args.all = False
                 args.lower_letters = True
@@ -612,7 +618,7 @@ def main(args):
 
             message = 'Password: {0}'.format(password)
             par(message + os.linesep, to_print=True, report=args.report)
-            clearmem(message)
+            clearmem(message)  # Obliterate password
             par(os.linesep, report=args.report)
 
         elif args.tool == 'analyzer':
@@ -669,7 +675,7 @@ def main(args):
 
             par(os.linesep, report=args.report)
 
-        clearmem(password)
+        clearmem(password)  # Obliterate password
 
     elif args.tool == 'dict_analyzer' or args.tool == 'dict_generator':
 
@@ -680,6 +686,7 @@ def main(args):
                 raise ValueError('Max word length is less than min word '
                                  'length')
 
+            # Obtain words matching user requirements
             dict_words = []
             if args.uncommon is True:
                 with resource_stream('aspgen', 'words.txt') as in_handle:
@@ -700,18 +707,19 @@ def main(args):
 
             message = 'Words in Password: {0}'.format(' '.join(words))
             par(message + os.linesep, to_print=True, report=args.report)
-            clearmem(message)
+            clearmem(message)  # Obliterate words in password
             if args.length > 1:  # clearmem will clear password if one word
                 for word in words:
-                    clearmem(word)
+                    clearmem(word)  # Obliterate words in password
 
             message = 'Password: {0}'.format(password)
             par(message + os.linesep, to_print=True, report=args.report)
-            clearmem(message)
+            clearmem(message)  # Obliterate password
             par(os.linesep, report=args.report)
 
         elif args.tool == 'dict_analyzer':
 
+            # Obtain common words
             dict_words = []
             with resource_stream('aspgen', 'common_words.txt') as in_handle:
                 for word in in_handle:
@@ -726,6 +734,7 @@ def main(args):
 
         stats = None
 
+        # Calcualte stats and par them
         if args.tool == 'dict_generator' and args.stats is True:
             par('Password Stats' + os.linesep, report=args.report)
             par('--------------' + os.linesep, report=args.report)
@@ -758,6 +767,7 @@ def main(args):
                     report=args.report)
                 par(os.linesep, report=args.report)
 
+        # Warn user if password is more vulnerable to brute force attacks
         if stats is not None and stats['entropy_raw'] < stats['entropy']:
             par(os.linesep, to_print=True, report=args.report)
             par('!' * 79 + os.linesep, to_print=True, report=args.report)
@@ -784,13 +794,16 @@ def main(args):
         par(os.linesep, report=args.report)
 
         for word in dict_words:
-            clearmem(word)
+            clearmem(word)  # Obliterate words in password
 
-        clearmem(password)
+        clearmem(password)  # Obliterate password
 
 
 def entry():
-    """Entry point for console_scripts and called if __name__ == __main__"""
+    """Entry point for console_scripts and called if __name__ == __main__
+
+    This function parses the command line, intializes aspgen, and calls
+    executes program tools and/or hands off execution to main()."""
 
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.
@@ -836,14 +849,6 @@ def entry():
                                nargs='+',
                                type=float,
                                help='password guesses per second by hacker')
-    dict_analyzer.add_argument('-m', '--min_length',
-                               default=5,
-                               type=int,
-                               help='minimum length word to use in password')
-    dict_analyzer.add_argument('-x', '--max_length',
-                               default=999,
-                               type=int,
-                               help='maximum length word to use in password')
 
     dict_generator = subparsers.add_parser('dict_generator',
                                            help='Securely generate a '
@@ -946,7 +951,23 @@ def entry():
 
     # Begin actual password generation and analysis portion of program
 
-    # Security Settings
+    # Check flags
+    if hasattr(args, 'guess_speeds') and hasattr(args, 'stats'):
+        if args.guess_speeds is not None and args.stats is False:
+            raise AttributeError('--guess_speeds requires --stats')
+
+    if hasattr(args, 'encrypt'):
+        if args.encrypt is not None:
+            try:
+                assert args.report is not None
+            except AssertionError:
+                raise AssertionError('--encrypt requires --report')
+            report_name = args.report.name
+            args.report.close()
+            args.report = cStringIO.StringIO()
+            report_file = open(report_name, 'w')  # Open before 'w' gone
+
+    # Secure Environment
     resource.RLIMIT_CORE = 0  # Prevent core dumps
     if args.tool == 'generator' or args.tool == 'dict_generator':
         entropy = 'Unavailable'
@@ -965,19 +986,9 @@ def entry():
         if entropy != 'Unavailable':
             while entropy < args.system_entropy:
                 sleep(1)
-                entropy = open('/proc/sys/kernel/random/entropy_avail', 'r')\
+                entropy = open('/proc/sys/kernel/random/entropy_avail', 'r') \
                           .read()
                 entropy = int(entropy.strip())
-
-        if args.encrypt is not None:
-            try:
-                assert args.report is not None
-            except AssertionError:
-                raise AssertionError('--encrypt requires --report')
-            report_name = args.report.name
-            args.report.close()
-            args.report = cStringIO.StringIO()
-            report_file = open(report_name, 'w')  # Need to open before 'w' gone
 
     # Easter Egg
     # 3.5e+8: gizmodo/5966169/the-hardware-hackers-use-to-crack-your-passwords
@@ -1015,14 +1026,17 @@ def entry():
         par('--------' + os.linesep, report=args.report)
         par(os.linesep, report=args.report)
 
+    # Hand off password generation and analysis
     main(args)
 
+    # Print end of report
     if args.report is not None:
         par('-' * 79 + os.linesep, report=args.report)
         par('Exiting aspgen V{0}'.format(__version__).center(79) + os.linesep,
             report=args.report)
         par('-' * 79 + os.linesep, report=args.report)
 
+    # Securely encrypt report file
     if args.encrypt:
         chars = password_characters()
         encrypt_password = generate_password(chars, 32)[0]
