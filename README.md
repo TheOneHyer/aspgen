@@ -433,7 +433,7 @@ also give users the statistics needed to ensure their password is
 secure. There are also many online password generators, but browsers
 may not be secure on either the client side (browser software hacked)
 or server side (website code maliciously stores/or and retrieves your
-password). Still more password generating software costs money--
+password). Still more password generating software cost money--
 ridiculous. In essence, secure password generation doesn't exist in a
 user friendly manner and thus aspgen was born.
 
