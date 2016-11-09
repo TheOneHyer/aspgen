@@ -75,7 +75,7 @@ __license__ = 'GPLv3'
 __maintainer__ = 'Alex Hyer'
 __credits__ = 'Eli Bendersky, Generic Human'
 __status__ = 'Beta'
-__version__ = '0.0.1rc9'
+__version__ = '0.0.1rc10'
 
 
 # http://eli.thegreenplace.net/2010/06/25/
@@ -915,10 +915,13 @@ def entry():
     readme = subparsers.add_parser('readme',
                                    help='print README.md and exit')
     readme.add_argument('-e', '--header',
-                        required=False,
                         default=None,
                         type=str,
                         help='only print README section defined by header')
+    readme.add_argument('-l', '--list_headers',
+                        default=None,
+                        action='store_true',
+                        help='print README headers and exit')
 
     args = parser.parse_args()
 
@@ -926,6 +929,8 @@ def entry():
     if args.tool == 'readme':
         with resource_stream('aspgen', 'README.md') as in_handle:
             to_print = True if args.header is None else False
+            if args.list_headers is True:  # Don't print non-headers
+                to_print = False
             header_depth = None
             for line in in_handle:
                 if line[0] == '#' and args.header is not None:
@@ -938,6 +943,8 @@ def entry():
                     elif header_depth is not None and \
                             line.count('#') == header_depth:
                         break
+                if args.list_headers is True and line[0] == '#':
+                    print(line.strip())
                 if to_print is True:
                     print(line.strip())
         sys.exit(0)

@@ -66,7 +66,8 @@ readme and exits. The tool can be accessed via:
 `aspgen readme`
 
 readme also includes a '--header' option to only print a section of this
-readme corresponding to given header.
+readme corresponding to given header. Available headers can be viewed
+via the '--list_headers' option.
 See [README Examples](#readme-examples) for '--header' examples.
 
 ### Global Arguments
@@ -199,6 +200,9 @@ shorthand notation of flags (available via '--help'):
 
 * Print of all of README to screen:
     - `aspgen readme`
+    
+* Print headers in README:
+    - `asgpen readme --list_headers`
     
 * Print everything under [Usage](#usage), including subsections:
     - `aspgen readme --header usage`
