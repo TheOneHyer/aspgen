@@ -28,10 +28,10 @@ __email__ = 'theonehyer@gmail.com'
 __license__ = 'GPLv3'
 __maintainer__ = 'Alex Hyer'
 __status__ = 'Beta'
-__version__ = '0.0.1rc8'
+__version__ = '0.0.1rc9'
 
 setup(name='aspgen',
-      version='0.0.1rc8',
+      version='0.0.1rc9',
       description='A Secure Password GENerator',
       classifiers=[
           'Development Status :: 4 - Beta',
@@ -44,7 +44,7 @@ setup(name='aspgen',
       ],
       keywords='secure password generator',
       url='https://github.com/TheOneHyer/aspgen',
-      download_url='https://github.com/TheOneHyer/aspgen/tarball/0.0.1rc8',
+      download_url='https://github.com/TheOneHyer/aspgen/tarball/0.0.1rc9',
       author='Alex Hyer',
       author_email='theonehyer@gmail.com',
       license='GPLv3',

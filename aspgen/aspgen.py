@@ -75,7 +75,7 @@ __license__ = 'GPLv3'
 __maintainer__ = 'Alex Hyer'
 __credits__ = 'Eli Bendersky, Generic Human'
 __status__ = 'Beta'
-__version__ = '0.0.1rc8'
+__version__ = '0.0.1rc9'
 
 
 # http://eli.thegreenplace.net/2010/06/25/
@@ -818,7 +818,7 @@ def entry():
                         help='generate runtime report, contains sensitive '
                              'data')
     parser.add_argument('-s', '--system_entropy',
-                        default=200,
+                        default=100,
                         type=int,
                         help='minimum system entropy required before '
                              'proceeding with program')
