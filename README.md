@@ -1,4 +1,4 @@
-#aspgen
+# aspgen
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -443,13 +443,13 @@ user friendly manner and thus aspgen was born.
 
 ## Roadmap
 
-aspgen 1.0.0 will be quite complete and well-documented. There will
-likely be no changes in the future except to add relevant statistics.
-One exception is adding Unicode support to aspgen and allow users to
-specify characters to add to or delete from the possible character set
-used for their passwords. There are current plans to develop aspgen
-2.0.0, but no time frame will be given for some time. aspgen 2.0.0 will
-sport a TUI (Text User Interface) using [URWID](http://http://urwid.org/).
+aspgen V1.0 is quite complete and well-documented. aspgen V1.1
+will include internal code changes to permit a more intuitive and
+manipulable internal structure. V1.2 will add Unicode support, and V1.3
+will allow users to add/exclude characters and words from passwords.
+There are current plans to develop aspgen 2.0.0, but no time frame will
+be given for some time. aspgen 2.0.0 will sport a TUI
+(Text User Interface) using [URWID](http://http://urwid.org/).
 Hopefully, a TUI will make aspgen extremely intuitive and convenient.
 While I have not officially decided if I will write aspgen 3.0.0, if I
 do, it will provide an X11 windowing system for use with GUI

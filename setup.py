@@ -8,7 +8,7 @@ Copyright:
     Copyright (C) 2016  Alex Hyer
 
     This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
+    it under the terms of the GNU General Public License as published bye
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
@@ -27,14 +27,14 @@ __author__ = 'Alex Hyer'
 __email__ = 'theonehyer@gmail.com'
 __license__ = 'GPLv3'
 __maintainer__ = 'Alex Hyer'
-__status__ = 'Beta'
-__version__ = '0.0.1rc10'
+__status__ = 'Production'
+__version__ = '1.0.0'
 
 setup(name='aspgen',
-      version='0.0.1rc10',
+      version='1.0.0',
       description='A Secure Password GENerator',
       classifiers=[
-          'Development Status :: 4 - Beta',
+          'Development Status :: 5 - Production/Stable',
           'Intended Audience :: End Users/Desktop',
           'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
           'Natural Language :: English',
@@ -44,7 +44,7 @@ setup(name='aspgen',
       ],
       keywords='secure password generator',
       url='https://github.com/TheOneHyer/aspgen',
-      download_url='https://github.com/TheOneHyer/aspgen/tarball/0.0.1rc10',
+      download_url='https://github.com/TheOneHyer/aspgen/tarball/1.0.0',
       author='Alex Hyer',
       author_email='theonehyer@gmail.com',
       license='GPLv3',
