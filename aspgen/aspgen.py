@@ -74,14 +74,14 @@ __email__ = 'theonehyer@gmail.com'
 __license__ = 'GPLv3'
 __maintainer__ = 'Alex Hyer'
 __credits__ = 'Eli Bendersky, Generic Human'
-__status__ = 'Production'
-__version__ = '1.0.0'
+__status__ = 'Alpha'
+__version__ = '1.1.0a1'
 
 
 # http://eli.thegreenplace.net/2010/06/25/
 # aes-encryption-of-files-in-python-with-pycrypto
 # Alex Hyer modified the code for readability
-def encrypt_file(key, stringio_file, out_filename=None, chunksize=64*1024):
+def encrypt_file(key, stringio_file, outfile, chunksize=64*1024):
     """Encrypts an in-memory file using AES (CBC mode) with the given key
 
     Args:
@@ -90,7 +90,7 @@ def encrypt_file(key, stringio_file, out_filename=None, chunksize=64*1024):
 
         stringio_file (StringIO): StringIO memory file to encrypt
 
-        out_filename (str): out file to write encrypted data
+        out_filename (File): out file handle to write encrypted data
 
         chunksize (int): size of the chunk which the function uses to read
                          and encrypt the file. Larger chunk sizes can be
@@ -102,31 +102,30 @@ def encrypt_file(key, stringio_file, out_filename=None, chunksize=64*1024):
     encryptor = AES.new(key, AES.MODE_CBC, iv)
     filesize = sys.getsizeof(stringio_file.getvalue())
 
-    with open(out_filename, 'wb') as outfile:
-        outfile.write(struct.pack('<Q', filesize))
-        outfile.write(iv)
+    outfile.write(struct.pack('<Q', filesize))
+    outfile.write(iv)
 
-        # "read" and chunk StringIO contents
-        contents = stringio_file.getvalue()
-        content_list = []
-        last_position = 0
-        for i in range(len(contents) % chunksize + 1):
-            if last_position + chunksize > len(contents):
-                content_list.append(contents[last_position:-1])
-            else:
-                content_list.append(content_list[
-                                    last_position:last_position + chunksize])
-            last_position += chunksize
-        content_list = filter(None, content_list)
+    # "read" and chunk StringIO contents
+    contents = stringio_file.getvalue()
+    content_list = []
+    last_position = 0
+    for i in range(len(contents) % chunksize + 1):
+        if last_position + chunksize > len(contents):
+            content_list.append(contents[last_position:-1])
+        else:
+            content_list.append(content_list[
+                                last_position:last_position + chunksize])
+        last_position += chunksize
+    content_list = filter(None, content_list)
 
-        # Pad small chunks and encrypt them
-        for chunk in content_list:
-            if len(chunk) == 0:
-                break
-            elif len(chunk) % 16 != 0:
-                chunk += ' ' * (16 - len(chunk) % 16)
+    # Pad small chunks and encrypt them
+    for chunk in content_list:
+        if len(chunk) == 0:
+            break
+        elif len(chunk) % 16 != 0:
+            chunk += ' ' * (16 - len(chunk) % 16)
 
-            outfile.write(encryptor.encrypt(chunk))
+        outfile.write(encryptor.encrypt(chunk))
 
 
 # http://eli.thegreenplace.net/2010/06/25/
@@ -617,16 +616,16 @@ def main(args):
             password = generate_password(chars, args.length, secure=False)[0]
 
             message = 'Password: {0}'.format(password)
-            par(message + os.linesep, to_print=True, report=args.report)
+            par(message + os.linesep, to_print=True, report=args.mem_report_file)
             clearmem(message)  # Obliterate password
-            par(os.linesep, report=args.report)
+            par(os.linesep, report=args.mem_report_file)
 
         elif args.tool == 'analyzer':
 
             password = getpass()
-            par('Password: ' + password, report=args.report)
-            par(os.linesep, report=args.report)
-            par(os.linesep, report=args.report)
+            par('Password: ' + password, report=args.mem_report_file)
+            par(os.linesep, report=args.mem_report_file)
+            par(os.linesep, report=args.mem_report_file)
 
             # Generate password sets for analysis
             lower_letters = password_characters(all=False, lower_letters=True)
@@ -639,41 +638,41 @@ def main(args):
             num_chars = 0
             if len(pass_set.intersection(lower_letters)) != 0:
                 par('Detected lowercase letters in password' + os.linesep,
-                    report=args.report)
+                    report=args.mem_report_file)
                 num_chars += len(lower_letters)
             if len(pass_set.intersection(upper_letters)) != 0:
                 par('Detected uppercase letters in password' + os.linesep,
-                    report=args.report)
+                    report=args.mem_report_file)
                 num_chars += len(upper_letters)
             if len(pass_set.intersection(numbers)) != 0:
                 par('Detected numbers in password' + os.linesep,
-                    report=args.report)
+                    report=args.mem_report_file)
                 num_chars += len(numbers)
             if len(pass_set.intersection(special_chars)) != 0:
                 par('Detected special characters in password' + os.linesep,
-                    report=args.report)
+                    report=args.mem_report_file)
                 num_chars += len(special_chars)
-            par(os.linesep, report=args.report)
+            par(os.linesep, report=args.mem_report_file)
 
         # Analyze password and par stats
         if args.tool == 'analyzer' or args.stats is True:
-            par('Password Stats' + os.linesep, report=args.report)
-            par('--------------' + os.linesep, report=args.report)
-            par(os.linesep, report=args.report)
+            par('Password Stats' + os.linesep, report=args.mem_report_file)
+            par('--------------' + os.linesep, report=args.mem_report_file)
+            par(os.linesep, report=args.mem_report_file)
             stats = password_stats(pass_len=len(password),
                                    num_parts=num_chars,
                                    guess_speeds=args.guess_speeds)
             c, e = print_stats(stats['combinations'], stats['entropy'])
-            par(c + os.linesep, to_print=True, report=args.report)
-            par(e + os.linesep, to_print=True, report=args.report)
+            par(c + os.linesep, to_print=True, report=args.mem_report_file)
+            par(e + os.linesep, to_print=True, report=args.mem_report_file)
             if stats['guess_table'] is not None:
                 par('{0}Average Time to Cracked Password'.format(os.linesep)
-                    + os.linesep, to_print=True, report=args.report)
+                    + os.linesep, to_print=True, report=args.mem_report_file)
                 par(str(stats['guess_table']), to_print=True,
-                    report=args.report)
-                par(os.linesep, report=args.report)
+                    report=args.mem_report_file)
+                par(os.linesep, report=args.mem_report_file)
 
-            par(os.linesep, report=args.report)
+            par(os.linesep, report=args.mem_report_file)
 
         clearmem(password)  # Obliterate password
 
@@ -706,16 +705,16 @@ def main(args):
                                                 get_parts=True)
 
             message = 'Words in Password: {0}'.format(' '.join(words))
-            par(message + os.linesep, to_print=True, report=args.report)
+            par(message + os.linesep, to_print=True, report=args.mem_report_file)
             clearmem(message)  # Obliterate words in password
             if args.length > 1:  # clearmem will clear password if one word
                 for word in words:
                     clearmem(word)  # Obliterate words in password
 
             message = 'Password: {0}'.format(password)
-            par(message + os.linesep, to_print=True, report=args.report)
+            par(message + os.linesep, to_print=True, report=args.mem_report_file)
             clearmem(message)  # Obliterate password
-            par(os.linesep, report=args.report)
+            par(os.linesep, report=args.mem_report_file)
 
         elif args.tool == 'dict_analyzer':
 
@@ -728,17 +727,17 @@ def main(args):
 
             password = getpass()
 
-            par('Password: ' + password, report=args.report)
-            par(os.linesep, report=args.report)
-            par(os.linesep, report=args.report)
+            par('Password: ' + password, report=args.mem_report_file)
+            par(os.linesep, report=args.mem_report_file)
+            par(os.linesep, report=args.mem_report_file)
 
         stats = None
 
-        # Calcualte stats and par them
+        # Calculate stats and par them
         if args.tool == 'dict_generator' and args.stats is True:
-            par('Password Stats' + os.linesep, report=args.report)
-            par('--------------' + os.linesep, report=args.report)
-            par(os.linesep, report=args.report)
+            par('Password Stats' + os.linesep, report=args.mem_report_file)
+            par('--------------' + os.linesep, report=args.mem_report_file)
+            par(os.linesep, report=args.mem_report_file)
             stats = password_stats(pass_len=args.length,
                                    num_parts=len(dict_words),
                                    guess_speeds=args.guess_speeds)
@@ -746,52 +745,52 @@ def main(args):
             stats['entropy_raw'] = log(stats['combinations_raw'], 2)
 
         elif args.tool == 'dict_analyzer':
-            par('Password Stats' + os.linesep, report=args.report)
-            par('--------------' + os.linesep, report=args.report)
-            par(os.linesep, report=args.report)
+            par('Password Stats' + os.linesep, report=args.mem_report_file)
+            par('--------------' + os.linesep, report=args.mem_report_file)
+            par(os.linesep, report=args.mem_report_file)
             stats = password_stats(dict_pass=password,
                                    dictionary=dict_words,
                                    guess_speeds=args.guess_speeds)
             par('Words in Password: {0}{1}'
                 .format(' '.join(stats['words']), os.linesep),
-                to_print=True, report=args.report)
+                to_print=True, report=args.mem_report_file)
 
         if args.tool == 'dict_analyzer' or args.stats is True:
             c, e = print_stats(stats['combinations'], stats['entropy'])
-            par(c + os.linesep, to_print=True, report=args.report)
-            par(e + os.linesep, to_print=True, report=args.report)
+            par(c + os.linesep, to_print=True, report=args.mem_report_file)
+            par(e + os.linesep, to_print=True, report=args.mem_report_file)
             if args.guess_speeds is not None:
                 par('{0}Average Time to Cracked Password'.format(os.linesep)
-                    + os.linesep, to_print=True, report=args.report)
+                    + os.linesep, to_print=True, report=args.mem_report_file)
                 par(str(stats['guess_table']), to_print=True,
-                    report=args.report)
-                par(os.linesep, report=args.report)
+                    report=args.mem_report_file)
+                par(os.linesep, report=args.mem_report_file)
 
         # Warn user if password is more vulnerable to brute force attacks
         if stats is not None and stats['entropy_raw'] < stats['entropy']:
-            par(os.linesep, to_print=True, report=args.report)
-            par('!' * 79 + os.linesep, to_print=True, report=args.report)
+            par(os.linesep, to_print=True, report=args.mem_report_file)
+            par('!' * 79 + os.linesep, to_print=True, report=args.mem_report_file)
             par('!' + 'WARNING'.center(77) + '!' + os.linesep,
-                to_print=True, report=args.report)
-            par('!' * 79 + os.linesep, to_print=True, report=args.report)
-            par(os.linesep, to_print=True, report=args.report)
+                to_print=True, report=args.mem_report_file)
+            par('!' * 79 + os.linesep, to_print=True, report=args.mem_report_file)
+            par(os.linesep, to_print=True, report=args.mem_report_file)
             par('Your password is more vulnerable to brute force '
-                + os.linesep, to_print=True, report=args.report)
+                + os.linesep, to_print=True, report=args.mem_report_file)
             par('attacks than dictionary attacks. Consider generating '
-                + os.linesep, to_print=True, report=args.report)
+                + os.linesep, to_print=True, report=args.mem_report_file)
             par('a dictionary password with more words or longer words.'
-                + os.linesep, to_print=True, report=args.report)
-            par(os.linesep, to_print=True, report=args.report)
+                + os.linesep, to_print=True, report=args.mem_report_file)
+            par(os.linesep, to_print=True, report=args.mem_report_file)
             par('Brute Force Stats' + os.linesep, to_print=True,
-                report=args.report)
+                report=args.mem_report_file)
             par('-----------------' + os.linesep, to_print=True,
-                report=args.report)
-            par(os.linesep, to_print=True, report=args.report)
+                report=args.mem_report_file)
+            par(os.linesep, to_print=True, report=args.mem_report_file)
             c, e = print_stats(stats['combinations_raw'], stats['entropy_raw'])
-            par(c + os.linesep, to_print=True, report=args.report)
-            par(e + os.linesep, to_print=True, report=args.report)
+            par(c + os.linesep, to_print=True, report=args.mem_report_file)
+            par(e + os.linesep, to_print=True, report=args.mem_report_file)
 
-        par(os.linesep, report=args.report)
+        par(os.linesep, report=args.mem_report_file)
 
         for word in dict_words:
             clearmem(word)  # Obliterate words in password
@@ -802,7 +801,7 @@ def main(args):
 def entry():
     """Entry point for console_scripts and called if __name__ == __main__
 
-    This function parses the command line, intializes aspgen, and calls
+    This function parses the command line, intializes aspgen, and calls/
     executes program tools and/or hands off execution to main()."""
 
     parser = argparse.ArgumentParser(description=__doc__,
@@ -814,7 +813,7 @@ def entry():
                         help='encrypt file and save key to file')
     parser.add_argument('-r', '--report',
                         default=None,
-                        type=argparse.FileType('w'),
+                        type=argparse.FileType('wb'),
                         help='generate runtime report, contains sensitive '
                              'data')
     parser.add_argument('-s', '--system_entropy',
@@ -963,16 +962,15 @@ def entry():
         if args.guess_speeds is not None and args.stats is False:
             raise AttributeError('--guess_speeds requires --stats')
 
-    if hasattr(args, 'encrypt'):
-        if args.encrypt is not None:
-            try:
-                assert args.report is not None
-            except AssertionError:
-                raise AssertionError('--encrypt requires --report')
-            report_name = args.report.name
-            args.report.close()
-            args.report = cStringIO.StringIO()
-            report_file = open(report_name, 'w')  # Open before 'w' gone
+    # Open memory file for report
+    setattr(args, 'mem_report_file')
+    args.mem_report_file = cStringIO.StringIO()
+
+    if hasattr(args, 'encrypt') and args.encrypt is not None:
+        try:
+            assert args.report is not None
+        except AssertionError:
+            raise AssertionError('--encrypt requires --report')
 
     # Secure Environment
     resource.RLIMIT_CORE = 0  # Prevent core dumps
@@ -1006,42 +1004,42 @@ def entry():
 
     # Print fanciful output to record password generation information
     if args.report is not None:
-        par('-' * 79 + os.linesep, report=args.report)
+        par('-' * 79 + os.linesep, report=args.mem_report_file)
         par('aspgen V{0}'.format(__version__).center(79) + os.linesep,
-            report=args.report)
-        par('-' * 79 + os.linesep, report=args.report)
-        par(os.linesep, report=args.report)
-        par('Parameters' + os.linesep, report=args.report)
-        par('----------' + os.linesep, report=args.report)
-        par(os.linesep, report=args.report)
+            report=args.mem_report_file)
+        par('-' * 79 + os.linesep, report=args.mem_report_file)
+        par(os.linesep, report=args.mem_report_file)
+        par('Parameters' + os.linesep, report=args.mem_report_file)
+        par('----------' + os.linesep, report=args.mem_report_file)
+        par(os.linesep, report=args.mem_report_file)
         lines = textwrap.wrap('Command: {0}'.format(
             os.linesep.join(sys.argv[:])), 79)
         for line in lines:
-            par(line + os.linesep, report=args.report)
+            par(line + os.linesep, report=args.mem_report_file)
         for arg in vars(args):
             par('{0}: {1}'.format(arg, getattr(args, arg)) + os.linesep,
-                report=args.report)
-        par(os.linesep, report=args.report)
-        par('Environmental Data' + os.linesep, report=args.report)
-        par('------------------' + os.linesep, report=args.report)
-        par(os.linesep, report=args.report)
-        par('Core Dumps: Disabled' + os.linesep, report=args.report)
+                report=args.mem_report_file)
+        par(os.linesep, report=args.mem_report_file)
+        par('Environmental Data' + os.linesep, report=args.mem_report_file)
+        par('------------------' + os.linesep, report=args.mem_report_file)
+        par(os.linesep, report=args.mem_report_file)
+        par('Core Dumps: Disabled' + os.linesep, report=args.mem_report_file)
         par('System Entropy: ' + str(entropy) + os.linesep,
-            report=args.report)
-        par(os.linesep, report=args.report)
-        par('Password' + os.linesep, report=args.report)
-        par('--------' + os.linesep, report=args.report)
-        par(os.linesep, report=args.report)
+            report=args.mem_report_file)
+        par(os.linesep, report=args.mem_report_file)
+        par('Password' + os.linesep, report=args.mem_report_file)
+        par('--------' + os.linesep, report=args.mem_report_file)
+        par(os.linesep, report=args.mem_report_file)
 
     # Hand off password generation and analysis
     main(args)
 
     # Print end of report
     if args.report is not None:
-        par('-' * 79 + os.linesep, report=args.report)
+        par('-' * 79 + os.linesep, report=args.mem_report_file)
         par('Exiting aspgen V{0}'.format(__version__).center(79) + os.linesep,
-            report=args.report)
-        par('-' * 79 + os.linesep, report=args.report)
+            report=args.mem_report_file)
+        par('-' * 79 + os.linesep, report=args.mem_report_file)
 
     # Securely encrypt report file
     if args.encrypt:
@@ -1052,7 +1050,7 @@ def entry():
         key = hash.digest()
         args.encrypt.write(key)
         args.encrypt.close()
-        encrypt_file(key, args.report, out_filename=report_name)
+        encrypt_file(key, args.mem_report_file, args.report)
         args.report.close()
 
     sys.exit(0)
