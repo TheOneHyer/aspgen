@@ -75,7 +75,7 @@ __license__ = 'GPLv3'
 __maintainer__ = 'Alex Hyer'
 __credits__ = 'Eli Bendersky, Generic Human'
 __status__ = 'Alpha'
-__version__ = '1.1.0a2'
+__version__ = '1.1.0a3'
 
 
 # http://eli.thegreenplace.net/2010/06/25/
@@ -661,6 +661,113 @@ def main(args):
         args (ArgumentParser): argparse ArgumentParser class
     """
 
+    # Print README.md and exit
+    if args.tool == 'readme':
+        with resource_stream('aspgen', 'README.md') as in_handle:
+            to_print = True if args.header is None else False
+            if args.list_headers is True:  # Don't print non-headers
+                to_print = False
+            header_depth = None
+            for line in in_handle:
+                if line[0] == '#' and args.header is not None:
+                    header = line.split(' ', 1)[-1]
+                    # Start printing at matching header
+                    if header.strip().lower() == args.header.lower():
+                        to_print = True
+                        header_depth = line.count('#')
+                    # Stop reading and printing at next header of equal depth
+                    elif header_depth is not None and \
+                                    line.count('#') == header_depth:
+                        break
+                if args.list_headers is True and line[0] == '#':
+                    print(line.strip())
+                if to_print is True:
+                    print(line.strip())
+        sys.exit(0)
+
+    # Decrypt file and exit
+    if args.tool == 'decrypter':
+        key = args.key_file.read()
+        args.key_file.close()
+        print(decrypt_file(key, args.report_file))
+        sys.exit(0)
+
+    # Begin actual password generation and analysis portion of program
+
+    # Check flags
+    if hasattr(args, 'guess_speeds') and hasattr(args, 'stats'):
+        if args.guess_speeds is not None and args.stats is False:
+            raise AttributeError('--guess_speeds requires --stats')
+
+    # Open memory file for report
+    setattr(args, 'mem_report_file', None)
+    args.mem_report_file = cStringIO.StringIO()
+
+    if hasattr(args, 'encrypt') and args.encrypt is not None:
+        try:
+            assert args.report is not None
+        except AssertionError:
+            raise AssertionError('--encrypt requires --report')
+
+    # Secure Environment
+    resource.RLIMIT_CORE = 0  # Prevent core dumps
+    if args.tool == 'generator' or args.tool == 'dict_generator':
+        entropy = 'Unavailable'
+        try:
+            entropy = open('/proc/sys/kernel/random/entropy_avail', 'r').read()
+            entropy = int(entropy.strip())
+        except IOError:
+            print('Cannot read entropy from '
+                  '/proc/sys/kernel/random/entropy_avail')
+            entropy = 'Unavailable'
+        if entropy < args.system_entropy:
+            print('System entropy is below {0}'
+                  .format(str(args.system_entropy)))
+            print('Type commands, open applications, read files, etc. to ')
+            print('raise system entropy. (Type Ctrl+C to end program)')
+        if entropy != 'Unavailable':
+            while entropy < args.system_entropy:
+                sleep(1)
+                entropy = open('/proc/sys/kernel/random/entropy_avail', 'r') \
+                    .read()
+                entropy = int(entropy.strip())
+
+    # Easter Egg
+    # 3.5e+8: gizmodo/5966169/the-hardware-hackers-use-to-crack-your-passwords
+    # 4.0+12 AntMiner S7
+    # 1.0e+16 NSA?
+    if hasattr(args, 'guess_speeds') is True and args.guess_speeds == [0]:
+        args.guess_speeds = [3.4e+8, 4.0e+12, 1.0e+16]
+
+    # Print fanciful output to record password generation information
+    if args.report is not None:
+        par('-' * 79 + os.linesep, report=args.mem_report_file)
+        par('aspgen V{0}'.format(__version__).center(79) + os.linesep,
+            report=args.mem_report_file)
+        par('-' * 79 + os.linesep, report=args.mem_report_file)
+        par(os.linesep, report=args.mem_report_file)
+        par('Parameters' + os.linesep, report=args.mem_report_file)
+        par('----------' + os.linesep, report=args.mem_report_file)
+        par(os.linesep, report=args.mem_report_file)
+        lines = textwrap.wrap('Command: {0}'.format(
+            os.linesep.join(sys.argv[:])), 79)
+        for line in lines:
+            par(line + os.linesep, report=args.mem_report_file)
+        for arg in vars(args):
+            par('{0}: {1}'.format(arg, getattr(args, arg)) + os.linesep,
+                report=args.mem_report_file)
+        par(os.linesep, report=args.mem_report_file)
+        par('Environmental Data' + os.linesep, report=args.mem_report_file)
+        par('------------------' + os.linesep, report=args.mem_report_file)
+        par(os.linesep, report=args.mem_report_file)
+        par('Core Dumps: Disabled' + os.linesep, report=args.mem_report_file)
+        par('System Entropy: ' + str(entropy) + os.linesep,
+            report=args.mem_report_file)
+        par(os.linesep, report=args.mem_report_file)
+        par('Password' + os.linesep, report=args.mem_report_file)
+        par('--------' + os.linesep, report=args.mem_report_file)
+        par(os.linesep, report=args.mem_report_file)
+
     if args.tool == 'generator' or args.tool == 'analyzer':
 
         if args.tool == 'generator':
@@ -869,12 +976,38 @@ def main(args):
 
         clearmem(password)  # Obliterate password
 
+    # Print end of report
+    par('-' * 79 + os.linesep, report=args.mem_report_file)
+    par('Exiting aspgen V{0}'.format(__version__).center(
+        79) + os.linesep,
+        report=args.mem_report_file)
+    par('-' * 79 + os.linesep, report=args.mem_report_file)
+
+    # Securely encrypt report file
+    if args.encrypt is not None:
+        chars = password_characters()
+        encrypt_password = generate_password(chars, 32)[0]
+        hash = SHA256.new()
+        hash.update(encrypt_password)
+        key = hash.digest()
+        args.encrypt.write(key)
+        args.encrypt.close()
+        encrypt_file(key, args.mem_report_file, args.report)
+        args.report.close()
+
+    # Write report file to disk if not encrypted
+    if args.report is not None and args.encrypt is None:
+        args.report.write(args.mem_report_file.getvalue())
+        args.report.close()
+
 
 def entry():
     """Entry point for console_scripts and called if __name__ == __main__
 
-    This function parses the command line, intializes aspgen, and calls/
-    executes program tools and/or hands off execution to main()."""
+    This function parses the command line and calls main(). The logic here is
+    that main() contains the actually program and function calls ad entry()
+    acts as an entry for command-line based use and parses arguments.
+    """
 
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.
@@ -996,139 +1129,7 @@ def entry():
 
     args = parser.parse_args()
 
-    # Print README.md and exit
-    if args.tool == 'readme':
-        with resource_stream('aspgen', 'README.md') as in_handle:
-            to_print = True if args.header is None else False
-            if args.list_headers is True:  # Don't print non-headers
-                to_print = False
-            header_depth = None
-            for line in in_handle:
-                if line[0] == '#' and args.header is not None:
-                    header = line.split(' ', 1)[-1]
-                    # Start printing at matching header
-                    if header.strip().lower() == args.header.lower():
-                        to_print = True
-                        header_depth = line.count('#')
-                    # Stop reading and printing at next header of equal depth
-                    elif header_depth is not None and \
-                            line.count('#') == header_depth:
-                        break
-                if args.list_headers is True and line[0] == '#':
-                    print(line.strip())
-                if to_print is True:
-                    print(line.strip())
-        sys.exit(0)
-
-    # Decrypt file and exit
-    if args.tool == 'decrypter':
-        key = args.key_file.read()
-        args.key_file.close()
-        print(decrypt_file(key, args.report_file))
-        sys.exit(0)
-
-    # Begin actual password generation and analysis portion of program
-
-    # Check flags
-    if hasattr(args, 'guess_speeds') and hasattr(args, 'stats'):
-        if args.guess_speeds is not None and args.stats is False:
-            raise AttributeError('--guess_speeds requires --stats')
-
-    # Open memory file for report
-    setattr(args, 'mem_report_file', None)
-    args.mem_report_file = cStringIO.StringIO()
-
-    if hasattr(args, 'encrypt') and args.encrypt is not None:
-        try:
-            assert args.report is not None
-        except AssertionError:
-            raise AssertionError('--encrypt requires --report')
-
-    # Secure Environment
-    resource.RLIMIT_CORE = 0  # Prevent core dumps
-    if args.tool == 'generator' or args.tool == 'dict_generator':
-        entropy = 'Unavailable'
-        try:
-            entropy = open('/proc/sys/kernel/random/entropy_avail', 'r').read()
-            entropy = int(entropy.strip())
-        except IOError:
-            print('Cannot read entropy from '
-                  '/proc/sys/kernel/random/entropy_avail')
-            entropy = 'Unavailable'
-        if entropy < args.system_entropy:
-            print('System entropy is below {0}'
-                  .format(str(args.system_entropy)))
-            print('Type commands, open applications, read files, etc. to ')
-            print('raise system entropy. (Type Ctrl+C to end program)')
-        if entropy != 'Unavailable':
-            while entropy < args.system_entropy:
-                sleep(1)
-                entropy = open('/proc/sys/kernel/random/entropy_avail', 'r') \
-                          .read()
-                entropy = int(entropy.strip())
-
-    # Easter Egg
-    # 3.5e+8: gizmodo/5966169/the-hardware-hackers-use-to-crack-your-passwords
-    # 4.0+12 AntMiner S7
-    # 1.0e+16 NSA?
-    if hasattr(args, 'guess_speeds') is True and args.guess_speeds == [0]:
-        args.guess_speeds = [3.4e+8, 4.0e+12, 1.0e+16]
-
-    # Print fanciful output to record password generation information
-    if args.report is not None:
-        par('-' * 79 + os.linesep, report=args.mem_report_file)
-        par('aspgen V{0}'.format(__version__).center(79) + os.linesep,
-            report=args.mem_report_file)
-        par('-' * 79 + os.linesep, report=args.mem_report_file)
-        par(os.linesep, report=args.mem_report_file)
-        par('Parameters' + os.linesep, report=args.mem_report_file)
-        par('----------' + os.linesep, report=args.mem_report_file)
-        par(os.linesep, report=args.mem_report_file)
-        lines = textwrap.wrap('Command: {0}'.format(
-            os.linesep.join(sys.argv[:])), 79)
-        for line in lines:
-            par(line + os.linesep, report=args.mem_report_file)
-        for arg in vars(args):
-            par('{0}: {1}'.format(arg, getattr(args, arg)) + os.linesep,
-                report=args.mem_report_file)
-        par(os.linesep, report=args.mem_report_file)
-        par('Environmental Data' + os.linesep, report=args.mem_report_file)
-        par('------------------' + os.linesep, report=args.mem_report_file)
-        par(os.linesep, report=args.mem_report_file)
-        par('Core Dumps: Disabled' + os.linesep, report=args.mem_report_file)
-        par('System Entropy: ' + str(entropy) + os.linesep,
-            report=args.mem_report_file)
-        par(os.linesep, report=args.mem_report_file)
-        par('Password' + os.linesep, report=args.mem_report_file)
-        par('--------' + os.linesep, report=args.mem_report_file)
-        par(os.linesep, report=args.mem_report_file)
-
-    # Hand off password generation and analysis
     main(args)
-
-    # Print end of report
-    if args.report is not None:
-        par('-' * 79 + os.linesep, report=args.mem_report_file)
-        par('Exiting aspgen V{0}'.format(__version__).center(79) + os.linesep,
-            report=args.mem_report_file)
-        par('-' * 79 + os.linesep, report=args.mem_report_file)
-
-    # Securely encrypt report file
-    if args.encrypt is not None:
-        chars = password_characters()
-        encrypt_password = generate_password(chars, 32)[0]
-        hash = SHA256.new()
-        hash.update(encrypt_password)
-        key = hash.digest()
-        args.encrypt.write(key)
-        args.encrypt.close()
-        encrypt_file(key, args.mem_report_file, args.report)
-        args.report.close()
-
-    # Write report file to disk if not encrypted
-    if args.report is not None and args.encrypt is None:
-        args.report.write(args.mem_report_file.getvalue())
-        args.report.close()
 
     sys.exit(0)
 
