@@ -75,7 +75,7 @@ __license__ = 'GPLv3'
 __maintainer__ = 'Alex Hyer'
 __credits__ = 'Eli Bendersky, Generic Human'
 __status__ = 'Alpha'
-__version__ = '1.1.0a1'
+__version__ = '1.1.0a2'
 
 
 # http://eli.thegreenplace.net/2010/06/25/
@@ -131,7 +131,7 @@ def encrypt_file(key, stringio_file, outfile, chunksize=64*1024):
 # http://eli.thegreenplace.net/2010/06/25/
 # aes-encryption-of-files-in-python-with-pycrypto
 # Alex Hyer modified the code for readability
-def decrypt_file(key, in_file, chunksize=24 * 1024):
+def decrypt_file(key, in_file, chunksize=24*1024):
     """Decrypts a file using AES (CBC mode) with the given key
 
     Args:
@@ -162,6 +162,78 @@ def decrypt_file(key, in_file, chunksize=24 * 1024):
             out += decryptor.decrypt(chunk)
 
         return out[0:origsize]
+
+
+def dict_stats(password, dictionary, guess_speeds=None, verbose=False):
+    """Analyze various dictionary password statistics
+
+    """
+
+    output = {
+        'combinations': None,
+        'entropy': None,
+        'combinations_raw': None,
+        'entropy_raw': None,
+        'words': None,
+        'guess_table': None
+    }
+
+    if verbose is True:
+        print('Calculating dictionary statistics')
+        print('Inferring words comprising password')
+    output['words'] = infer_spaces(password, dictionary)
+    output['combinations'] = len(dictionary) ** len(output['words'])
+    output['entropy'] = log(output['combinations'], 2)
+    if verbose is True:
+        print('Words in Password: {0}'.format(' '.join(output['words'])))
+
+    if verbose is True:
+        print('Determining characters in password')
+
+    # Generate password sets for analysis
+    lower_letters = password_characters(all=False, lower_letters=True)
+    upper_letters = password_characters(all=False, upper_letters=True)
+    numbers = password_characters(all=False, numbers=True)
+    special_chars = password_characters(all=False, special_chars=True)
+    pass_set = set(password)
+
+    # Detect characters in password
+    num_parts = 0
+    if len(pass_set.intersection(lower_letters)) != 0:
+        if verbose is True:
+            print('Detected lowercase letters in password')
+        num_parts += len(lower_letters)
+    if len(pass_set.intersection(upper_letters)) != 0:
+        if verbose is True:
+            print('Detected uppercase letters in password')
+        num_parts += len(upper_letters)
+    if len(pass_set.intersection(numbers)) != 0:
+        if verbose is True:
+            print('Detected numbers in password')
+        num_parts += len(numbers)
+    if len(pass_set.intersection(special_chars)) != 0:
+        if verbose is True:
+            print('Detected special characters in password')
+        num_parts += len(special_chars)
+
+    if verbose:
+        print('Calculating basic stats for dictionary password')
+    pass_len = len(password)
+    output['combinations_raw'] = num_parts ** pass_len
+    output['entropy_raw'] = log(output['combinations_raw'], 2)
+
+    if guess_speeds is not None:
+        times = [float(output['combinations'] / 2 / speed)
+                 for speed in guess_speeds]
+        times = ['{0:.2e}'.format(time) for time in times]
+        times.insert(0, 'Time to Guess (sec)')
+        guess_speeds = ['{0:.2e}'.format(speed) for speed in guess_speeds]
+        guess_speeds.insert(0, 'Guess Speeds (passwords/sec)')
+        table = PrettyTable(guess_speeds)
+        table.add_row(times)
+        output['guess_table'] = table
+
+    return output
 
 
 def generate_password(chars, length, get_parts=False, secure=True):
@@ -616,7 +688,8 @@ def main(args):
             password = generate_password(chars, args.length, secure=False)[0]
 
             message = 'Password: {0}'.format(password)
-            par(message + os.linesep, to_print=True, report=args.mem_report_file)
+            par(message + os.linesep, to_print=True,
+                report=args.mem_report_file)
             clearmem(message)  # Obliterate password
             par(os.linesep, report=args.mem_report_file)
 
@@ -748,9 +821,8 @@ def main(args):
             par('Password Stats' + os.linesep, report=args.mem_report_file)
             par('--------------' + os.linesep, report=args.mem_report_file)
             par(os.linesep, report=args.mem_report_file)
-            stats = password_stats(dict_pass=password,
-                                   dictionary=dict_words,
-                                   guess_speeds=args.guess_speeds)
+            stats = dict_stats(password, dict_words,
+                               guess_speeds=args.guess_speeds)
             par('Words in Password: {0}{1}'
                 .format(' '.join(stats['words']), os.linesep),
                 to_print=True, report=args.mem_report_file)
@@ -963,7 +1035,7 @@ def entry():
             raise AttributeError('--guess_speeds requires --stats')
 
     # Open memory file for report
-    setattr(args, 'mem_report_file')
+    setattr(args, 'mem_report_file', None)
     args.mem_report_file = cStringIO.StringIO()
 
     if hasattr(args, 'encrypt') and args.encrypt is not None:
@@ -986,8 +1058,8 @@ def entry():
         if entropy < args.system_entropy:
             print('System entropy is below {0}'
                   .format(str(args.system_entropy)))
-            print('Type commands, open applications, read files, etc. to raise')
-            print('system entropy. (Type Ctrl+C to end program)')
+            print('Type commands, open applications, read files, etc. to ')
+            print('raise system entropy. (Type Ctrl+C to end program)')
         if entropy != 'Unavailable':
             while entropy < args.system_entropy:
                 sleep(1)
@@ -1042,7 +1114,7 @@ def entry():
         par('-' * 79 + os.linesep, report=args.mem_report_file)
 
     # Securely encrypt report file
-    if args.encrypt:
+    if args.encrypt is not None:
         chars = password_characters()
         encrypt_password = generate_password(chars, 32)[0]
         hash = SHA256.new()
@@ -1051,6 +1123,11 @@ def entry():
         args.encrypt.write(key)
         args.encrypt.close()
         encrypt_file(key, args.mem_report_file, args.report)
+        args.report.close()
+
+    # Write report file to disk if not encrypted
+    if args.report is not None and args.encrypt is None:
+        args.report.write(args.mem_report_file.getvalue())
         args.report.close()
 
     sys.exit(0)
