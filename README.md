@@ -14,7 +14,7 @@
 4. [Examples](#examples)
     * [README Examples](#readme-examples)
     * [Generator Examples](#generator-examples)
-    * [Analzyer Example](#analyzer-example)
+    * [Analyzer Example](#analyzer-example)
     * [Dictionary Generator Examples](#dictionary-generator-examples)
     * [Dictionary Analzyer Example](#dictionary-analyzer-example)
     * [Decrypter Example](#decrypter-example)
@@ -23,7 +23,13 @@
     * [Dictionary Passwords](#dictionary-passwords)
     * [Environmental Security](#environmental-security)
 6. [Inspiration](#inspiration)
-7. [Roadmap](#roadmap)
+7. [Bugs](#bugs)
+8. [Roadmap](#roadmap)
+    * [V1.0](#V1.0)
+    * [V1.1](#V1.1)
+    * [V1.2](#V1.2)
+    * [V2.0](#V2.0)
+    * [V3.0](#V3.0)
 
 ## Introduction
 
@@ -40,8 +46,7 @@ password security and aspgen's implementations.
 
 `pip install aspgen`
 
-*Note: aspgen only works with Python 2.7 and only works on \*nix
-systems*
+*Note: aspgen only works with Python 2.7*
 
 ## Usage
 
@@ -441,16 +446,37 @@ password). Still more password generating software cost money--
 ridiculous. In essence, secure password generation doesn't exist in a
 user friendly manner and thus aspgen was born.
 
+## Bugs
+
+There are currently no known bugs with aspgen V1.1. Please report all
+reproducible bugs to theonehyer@gmail.com. aspgen is only tested with
+Python 2.7 on Ubuntu 16.04 LTS during production and tested on CentOS 7 once
+before a "Stable" version is released.
+
 ## Roadmap
 
-aspgen V1.0 is quite complete and well-documented. aspgen V1.1
-will include internal code changes to permit a more intuitive and
-manipulable internal structure. V1.2 will add Unicode support, and V1.3
-will allow users to add/exclude characters and words from passwords.
-There are current plans to develop aspgen 2.0.0, but no time frame will
-be given for some time. aspgen 2.0.0 will sport a TUI
-(Text User Interface) using [URWID](http://http://urwid.org/).
-Hopefully, a TUI will make aspgen extremely intuitive and convenient.
+### V1.0
+
+Initial version. Documented and completed.
+
+### V1.1
+
+Internal code changes to permit a more intuitive and manipulable internal 
+structure with easier-to-import functionality.
+
+### V1.2
+
+Add Unicode support. Add ability for user to create custom include/exclude 
+lists.
+
+### V2.0
+
+aspgen 2.0.0 will sport a TUI (Text User Interface) using
+[URWID](http://http://urwid.org/). Hopefully, a TUI will make aspgen 
+extremely intuitive and convenient.
+
+### V3.0
+
 While I have not officially decided if I will write aspgen 3.0.0, if I
 do, it will provide an X11 windowing system for use with GUI
 (Graphical User Interfaces) systems. As an open-source project, I

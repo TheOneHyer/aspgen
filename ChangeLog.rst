@@ -4,6 +4,12 @@ Changelog
 %%version%% (unreleased)
 ------------------------
 
+- Streamlined Guess Table, add ChangeLog.rst. [TheOneHyer]
+
+  Created guess_table() to reduce code redundancy when generating
+  guessing table for password. Project upped to release candidate
+  as all changes planned for V1.1 complete and just need testing.
+
 - Streamlined password_stats. [TheOneHyer]
 
   password_stats() now only calculated stats for non-dictionary passwords.
