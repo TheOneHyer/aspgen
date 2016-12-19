@@ -74,58 +74,8 @@ __email__ = 'theonehyer@gmail.com'
 __license__ = 'GPLv3'
 __maintainer__ = 'Alex Hyer'
 __credits__ = 'Eli Bendersky, Generic Human'
-__status__ = 'Alpha'
-__version__ = '1.1.0a5'
-
-
-# http://eli.thegreenplace.net/2010/06/25/
-# aes-encryption-of-files-in-python-with-pycrypto
-# Alex Hyer modified the code for readability
-def encrypt_file(key, stringio_file, outfile, chunksize=64*1024):
-    """Encrypts an in-memory file using AES (CBC mode) with the given key
-
-    Args:
-        key (str): encryption key, a 16, 24 or 32 byte long string, Longer keys
-                   are more secure.
-
-        stringio_file (StringIO): StringIO memory file to encrypt
-
-        out_filename (File): out file handle to write encrypted data
-
-        chunksize (int): size of the chunk which the function uses to read
-                         and encrypt the file. Larger chunk sizes can be
-                         faster for some files and machines.
-                         chunksize must be divisible by 16.
-    """
-
-    iv = ''.join(chr(random.randint(0, 0xFF)) for i in range(16))
-    encryptor = AES.new(key, AES.MODE_CBC, iv)
-    filesize = sys.getsizeof(stringio_file.getvalue())
-
-    outfile.write(struct.pack('<Q', filesize))
-    outfile.write(iv)
-
-    # "read" and chunk StringIO contents
-    contents = stringio_file.getvalue()
-    content_list = []
-    last_position = 0
-    for i in range(len(contents) % chunksize + 1):
-        if last_position + chunksize > len(contents):
-            content_list.append(contents[last_position:-1])
-        else:
-            content_list.append(content_list[
-                                last_position:last_position + chunksize])
-        last_position += chunksize
-    content_list = filter(None, content_list)
-
-    # Pad small chunks and encrypt them
-    for chunk in content_list:
-        if len(chunk) == 0:
-            break
-        elif len(chunk) % 16 != 0:
-            chunk += ' ' * (16 - len(chunk) % 16)
-
-        outfile.write(encryptor.encrypt(chunk))
+__status__ = 'Beta'
+__version__ = '1.1.0rc1'
 
 
 # http://eli.thegreenplace.net/2010/06/25/
@@ -260,17 +210,60 @@ def dict_stats(password, dictionary, guess_speeds=None, verbose=False):
     output['entropy_raw'] = log(output['combinations_raw'], 2)
 
     if guess_speeds is not None:
-        times = [float(output['combinations'] / 2 / speed)
-                 for speed in guess_speeds]
-        times = ['{0:.2e}'.format(time) for time in times]
-        times.insert(0, 'Time to Guess (sec)')
-        guess_speeds = ['{0:.2e}'.format(speed) for speed in guess_speeds]
-        guess_speeds.insert(0, 'Guess Speeds (passwords/sec)')
-        table = PrettyTable(guess_speeds)
-        table.add_row(times)
-        output['guess_table'] = table
+        output['guess_table'] = guess_table(output['combinations'],
+                                            guess_speeds)
 
     return output
+
+
+# http://eli.thegreenplace.net/2010/06/25/
+# aes-encryption-of-files-in-python-with-pycrypto
+# Alex Hyer modified the code for readability
+def encrypt_file(key, stringio_file, outfile, chunksize=64*1024):
+    """Encrypts an in-memory file using AES (CBC mode) with the given key
+
+    Args:
+        key (str): encryption key, a 16, 24 or 32 byte long string, Longer keys
+                   are more secure.
+
+        stringio_file (StringIO): StringIO memory file to encrypt
+
+        out_filename (File): out file handle to write encrypted data
+
+        chunksize (int): size of the chunk which the function uses to read
+                         and encrypt the file. Larger chunk sizes can be
+                         faster for some files and machines.
+                         chunksize must be divisible by 16.
+    """
+
+    iv = ''.join(chr(random.randint(0, 0xFF)) for i in range(16))
+    encryptor = AES.new(key, AES.MODE_CBC, iv)
+    filesize = sys.getsizeof(stringio_file.getvalue())
+
+    outfile.write(struct.pack('<Q', filesize))
+    outfile.write(iv)
+
+    # "read" and chunk StringIO contents
+    contents = stringio_file.getvalue()
+    content_list = []
+    last_position = 0
+    for i in range(len(contents) % chunksize + 1):
+        if last_position + chunksize > len(contents):
+            content_list.append(contents[last_position:-1])
+        else:
+            content_list.append(content_list[
+                                last_position:last_position + chunksize])
+        last_position += chunksize
+    content_list = filter(None, content_list)
+
+    # Pad small chunks and encrypt them
+    for chunk in content_list:
+        if len(chunk) == 0:
+            break
+        elif len(chunk) % 16 != 0:
+            chunk += ' ' * (16 - len(chunk) % 16)
+
+        outfile.write(encryptor.encrypt(chunk))
 
 
 def generate_password(chars, length, get_parts=False, secure=True):
@@ -325,6 +318,31 @@ def generate_password(chars, length, get_parts=False, secure=True):
         parts = None
 
     return password, parts
+
+
+def guess_table(combinations, guess_speeds):
+    """Generate PrettyTable of average password cracking speeds
+
+    Args:
+         combinations (int): number of possible
+
+         guess_speeds (list): list of ints or floats representative
+                              passwords/sec guessing speeds applied against
+                              password
+
+    Return:
+        PrettyTable: PrettyTable of password cracking speeds
+    """
+
+    times = [(combinations / 2 / speed) for speed in guess_speeds]
+    times = ['{0:.2e}'.format(time) for time in times]
+    times.insert(0, 'Time to Guess (sec)')
+    guess_speeds = ['{0:.2e}'.format(speed) for speed in guess_speeds]
+    guess_speeds.insert(0, 'Guess Speeds (passwords/sec)')
+    table = PrettyTable(guess_speeds)
+    table.add_row(times)
+
+    return table
 
 
 # Credit: Generic Human on StackOverflow: http://stackoverflow.com/questions/
@@ -494,15 +512,8 @@ def password_stats(pass_len, num_parts, guess_speeds=None, verbose=False):
     output['entropy'] = log(output['combinations'], 2)
 
     if guess_speeds is not None:
-        times = [float(output['combinations'] / 2 / speed)
-                 for speed in guess_speeds]
-        times = ['{0:.2e}'.format(time) for time in times]
-        times.insert(0, 'Time to Guess (sec)')
-        guess_speeds = ['{0:.2e}'.format(speed) for speed in guess_speeds]
-        guess_speeds.insert(0, 'Guess Speeds (passwords/sec)')
-        table = PrettyTable(guess_speeds)
-        table.add_row(times)
-        output['guess_table'] = table
+        output['guess_table'] = guess_table(output['combinations'],
+                                            guess_speeds)
 
     return output
 
@@ -771,7 +782,8 @@ def main(args):
                     clearmem(word)  # Obliterate words in password
 
             message = 'Password: {0}'.format(password)
-            par(message + os.linesep, to_print=True, report=args.mem_report_file)
+            par(message + os.linesep, to_print=True,
+                report=args.mem_report_file)
             clearmem(message)  # Obliterate password
             par(os.linesep, report=args.mem_report_file)
 
