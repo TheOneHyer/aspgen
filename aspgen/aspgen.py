@@ -75,7 +75,7 @@ __license__ = 'GPLv3'
 __maintainer__ = 'Alex Hyer'
 __credits__ = 'Eli Bendersky, Generic Human'
 __status__ = 'Alpha'
-__version__ = '1.1.0a3'
+__version__ = '1.1.0a4'
 
 
 # http://eli.thegreenplace.net/2010/06/25/
@@ -167,6 +167,41 @@ def decrypt_file(key, in_file, chunksize=24*1024):
 def dict_stats(password, dictionary, guess_speeds=None, verbose=False):
     """Analyze various dictionary password statistics
 
+    Important Note to Develoeprs: dict_stats uses Zipf's Law to tease apart
+        the words in the password and thus determine password length. In
+        order to do this, the dictionary must be sorted from the greatest
+        usage frequency in the given language to lowest word frequency. If a
+        frequency-sorted dictionary is unavailable, this function is useless
+        and will provide incorrect results.
+
+    Args:
+        password (str): password to analyze
+
+        dictionary (list): list of str containing word list used to generate
+                           password ordered by frequency in language
+
+        guess_speeds (list): list of ints representing the guesses/sec a hacker
+                             can perform when attempting to crack the
+                             password, else None. Returns a table.
+
+        verbose (bool): If True, prints progress messages
+
+    Returns:
+        dict: dictionary of password stats. All password stats not calculated
+              have value of None. Dictionary keys are (in YAML format):
+
+              combinations <int of password combinations>
+              entropy <float of password entropy>
+              combinations_raw <if dict_pass is provided, int of password
+                                combinations if password generated from ASCII
+                                characters>
+              entropy_raw <if dict_pass is provided, float of password
+                           entropy if password generated from ASCII
+                           characters>
+              words <if dict_pass and dictionary provided, list of str
+                     containing words in password>
+              guess_table <if guess_speeds provided, PrettyTable of password
+                           guessing speeds>
     """
 
     output = {
