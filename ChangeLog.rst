@@ -4,6 +4,11 @@ Changelog
 %%version%% (unreleased)
 ------------------------
 
+- Added Bugs to README, Improved Roadmap. [TheOneHyer]
+
+  Divided Roadmap section of README into subsections for each version.
+  Added Bugs section to README.
+
 - Streamlined Guess Table, add ChangeLog.rst. [TheOneHyer]
 
   Created guess_table() to reduce code redundancy when generating

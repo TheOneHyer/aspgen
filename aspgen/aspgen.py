@@ -75,7 +75,7 @@ __license__ = 'GPLv3'
 __maintainer__ = 'Alex Hyer'
 __credits__ = 'Eli Bendersky, Generic Human'
 __status__ = 'Beta'
-__version__ = '1.1.0rc2'
+__version__ = '1.1.0rc3'
 
 
 # http://eli.thegreenplace.net/2010/06/25/
@@ -591,8 +591,7 @@ def main(args):
             raise AttributeError('--guess_speeds requires --stats')
 
     # Open memory file for report
-    setattr(args, 'mem_report_file', None)
-    args.mem_report_file = cStringIO.StringIO()
+    setattr(args, 'mem_report_file', cStringIO.StringIO())
 
     if hasattr(args, 'encrypt') and args.encrypt is not None:
         try:
