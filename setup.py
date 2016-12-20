@@ -31,7 +31,7 @@ __status__ = 'Stable'
 __version__ = '1.1.0'
 
 setup(name='aspgen',
-      version='1.1.0rc3',
+      version='1.1.0',
       description='A Secure Password GENerator',
       classifiers=[
           'Development Status :: 5 - Production/Stable',
