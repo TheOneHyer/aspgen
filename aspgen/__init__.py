@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-"""
+"""Initialize aspgen package
 
 Copyright:
 
@@ -25,6 +25,5 @@ __author__ = 'Alex Hyer'
 __email__ = 'theonehyer@gmail.com'
 __license__ = 'GPLv3'
 __maintainer__ = 'Alex Hyer'
-__status__ = 'Alpha'
-__version__ = '0.0.1'
-
+__status__ = 'Beta'
+__version__ = '1.1.0rc3'
