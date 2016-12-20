@@ -4,6 +4,14 @@ Changelog
 %%version%% (unreleased)
 ------------------------
 
+- Updated __init__ version. [TheOneHyer]
+
+- Small Code Redundancy Removed. [TheOneHyer]
+
+  Opened memory file when attribute is defined instead of the line after.
+  aspgen appears functional but will wait one day min before
+  testing.
+
 - Added Bugs to README, Improved Roadmap. [TheOneHyer]
 
   Divided Roadmap section of README into subsections for each version.
