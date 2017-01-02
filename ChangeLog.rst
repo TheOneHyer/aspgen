@@ -4,6 +4,8 @@ Changelog
 %%version%% (unreleased)
 ------------------------
 
+- Whole Project Now Uses Unicode Literals. [TheOneHyer]
+
 - Branched V1.2 to Add Unicode Support. [TheOneHyer]
 
 - Modified setup.py version. [TheOneHyer]

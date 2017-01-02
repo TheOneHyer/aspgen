@@ -13,7 +13,7 @@ https://github.com/TheOneHyer/aspgen
 
 or via:
 
-aspgen readme
+```aspgen readme```
 
 A brief synopsis of each function is provided here:
 
@@ -76,7 +76,7 @@ __license__ = 'GPLv3'
 __maintainer__ = 'Alex Hyer'
 __credits__ = 'Eli Bendersky, Generic Human'
 __status__ = 'Alpha'
-__version__ = '1.2.0a2'
+__version__ = '1.2.0a3'
 
 
 # http://eli.thegreenplace.net/2010/06/25/
@@ -899,6 +899,7 @@ def entry():
     acts as an entry for command-line based use and parses arguments.
     """
 
+    # Initialize parser and create universal arguments
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.
                                      RawDescriptionHelpFormatter)
@@ -916,9 +917,12 @@ def entry():
                         type=int,
                         help='minimum system entropy required before '
                              'proceeding with program')
+
+    # Initialize subparsers
     subparsers = parser.add_subparsers(title='Tools',
                                        dest='tool')
 
+    # Specify arguments for password analyzer
     analyzer = subparsers.add_parser('analyzer',
                                      help='Analyze a given password')
     analyzer.add_argument('-g', '--guess_speeds',
@@ -926,6 +930,7 @@ def entry():
                           type=float,
                           help='password guesses per second by hacker')
 
+    # Specify arguments for password report decrypter
     decoder = subparsers.add_parser('decrypter',
                                     help='Decrypt encrypted report file')
     decoder.add_argument('report_file',
@@ -935,6 +940,7 @@ def entry():
                          type=argparse.FileType('rb'),
                          help='key file to unlock report file')
 
+    # Specify arguments for dictionary password analyzer
     dict_analyzer = subparsers.add_parser('dict_analyzer',
                                           help='Analyze a dictionary-based '
                                                'password')
@@ -944,6 +950,8 @@ def entry():
                                type=float,
                                help='password guesses per second by hacker')
 
+    # Specify arguments for dictionary password generator
+    # TODO: Allow custom dictionaries
     dict_generator = subparsers.add_parser('dict_generator',
                                            help='Securely generate a '
                                                 'dictionary-based password')
@@ -971,6 +979,7 @@ def entry():
                                 type=int,
                                 help='maximum length word to use in password')
 
+    # Specify arguments for password generator
     generator = subparsers.add_parser('generator',
                                       help='Securely generate a password')
     generator.add_argument('-a', '--all',
@@ -1006,6 +1015,7 @@ def entry():
                            action='store_true',
                            help='permit uppercase letters in password')
 
+    # Specify arguments for readme access tool
     readme = subparsers.add_parser('readme',
                                    help='print README.md and exit')
     readme.add_argument('-e', '--header',
