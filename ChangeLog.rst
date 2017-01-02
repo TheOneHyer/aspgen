@@ -4,6 +4,11 @@ Changelog
 %%version%% (unreleased)
 ------------------------
 
+- Finished Coding ParseUnicode. [TheOneHyer]
+
+  ParseUnicode done being code but isn't implemented or
+  tested.
+
 - Added Skeleton Code for ParseUnicode. [TheOneHyer]
 
   ParseUnicode class being made to extend argparse

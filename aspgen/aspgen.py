@@ -77,17 +77,17 @@ __license__ = 'GPLv3'
 __maintainer__ = 'Alex Hyer'
 __credits__ = 'Eli Bendersky, Generic Human'
 __status__ = 'Alpha'
-__version__ = '1.2.0a5'
+__version__ = '1.2.0a6'
 
 
-class ParseUnicode(argparse.Action):
+class UnicodeParser(argparse.Action):
     """Argparse Action to parse Unicode input
 
     Attributes:
         option_strings (list): list of str giving command line flags that
                                call this action
 
-        dest (str): Namespace reference to value
+        dest (unicode): Namespace reference to value
 
         nargs (bool): True if multiple arguments specified
 
@@ -97,7 +97,7 @@ class ParseUnicode(argparse.Action):
     def __init__(self, option_strings, dest, **kwargs):
         """Initialize class and calls base class"""
 
-        super(ParseUnicode, self).__init__(option_strings, dest, **kwargs)
+        super(UnicodeParser, self).__init__(option_strings, dest, **kwargs)
 
     def __call__(self, parser, namespace, values, option_string=None):
         """Parse Unicode input into characters and set characters as argument
@@ -109,7 +109,7 @@ class ParseUnicode(argparse.Action):
 
             values (list): actual value(s) specified by user
 
-            option_string (str): argument flag used to call this function
+            option_string (unicode): argument flag used to call this function
 
         Raises:
             AssertionError: if unicode range start is larger than stop
@@ -141,7 +141,8 @@ class ParseUnicode(argparse.Action):
             else:  # If not hexidecimal code, simply add character
                 chars.append(value)
 
-        setattr(namespace, self.dest, chars)
+        # Set list of unique characters
+        setattr(namespace, self.dest, list(set(chars)))
 
 
 # http://eli.thegreenplace.net/2010/06/25/
@@ -151,10 +152,10 @@ def decrypt_file(key, in_file, chunksize=24*1024):
     """Decrypts a file using AES (CBC mode) with the given key
 
     Args:
-        key (str): decryption key, a 16, 24 or 32 byte long string, Longer keys
-                   are more secure.
+        key (unicode): decryption key, a 16, 24 or 32 byte long string, Longer
+                       keys are more secure.
 
-        in_file (str): encrypted file to read
+        in_file (unicode): encrypted file to read
 
         chunksize (int): size of the chunk which the function uses to read
                          and decrypt the file. Larger chunk sizes can be
@@ -162,7 +163,7 @@ def decrypt_file(key, in_file, chunksize=24*1024):
                          chunksize must be divisible by 16.
 
     Returns:
-        str: decrypted data from file
+        unicode: decrypted data from file
     """
 
     with open(in_file, 'rb') as infile:
@@ -193,7 +194,7 @@ def dict_stats(password, dictionary, guess_speeds=None, verbose=False):
         given dictionary.
 
     Args:
-        password (str): password to analyze
+        password (unicode): password to analyze
 
         dictionary (list): list of str containing word list used to generate
                            password ordered by frequency in language
@@ -289,8 +290,8 @@ def encrypt_file(key, stringio_file, outfile, chunksize=64*1024):
     """Encrypts an in-memory file using AES (CBC mode) with the given key
 
     Args:
-        key (str): encryption key, a 16, 24 or 32 byte long string, Longer keys
-                   are more secure.
+        key (unicode): encryption key, a 16, 24 or 32 byte long string, Longer
+                       keys are more secure.
 
         stringio_file (StringIO): StringIO memory file to encrypt
 
@@ -352,7 +353,7 @@ def generate_password(chars, length, get_parts=False, secure=True):
                        memory, only chars are deleted.
 
     Returns:
-        tuple: (password (str), parts (list)), password and strings
+        tuple: (password (unicode), parts (list)), password and strings
                constituting passwords. parts in tuple is None if get_parts
                flag is False
 
@@ -418,7 +419,7 @@ def infer_spaces(string, words):
     """Infer space locations in a string without spaces
 
     Args:
-        string (str): string to infer spaces of
+        string (unicode): string to infer spaces of
 
         words (list): list of str containing all possible words
 
@@ -428,7 +429,7 @@ def infer_spaces(string, words):
     Example:
         >>> from pkg_resources import resource_string
         >>> dict_words = resource_string('aspgen', 'common_words.txt').split()
-        >>> infer_spaces('thecatinthehat', dict_words)
+        >>> infer_spaces(u'thecatinthehat', dict_words)
         ['the', 'cat', 'in', 'the', 'hat']
     """
 
@@ -478,7 +479,7 @@ def par(message, to_print=False, report=None):
     """Print And Report, convenience wrapper for printing to screen and file
 
     Args:
-        message (str): message to print or write
+        message (unicode): message to print or write
 
         to_print (bool): Whether or not to print message to screen
 
@@ -493,13 +494,16 @@ def par(message, to_print=False, report=None):
         print(message)
 
 
-def password_characters(all=True, lower_letters=False, upper_letters=False,
-                        numbers=False, special_chars=False):
+def password_characters(all=True, charset=None, lower_letters=False,
+                        upper_letters=False, numbers=False,
+                        special_chars=False):
     """Create a list of possible characters for a password
 
     Args:
         all (bool): same as setting lower_letters, upper_letters, and
                     special_chars all to True
+
+        charset (list): list of unicode referring to Unicode sets, see below
 
         lower_letters (bool): add lower-case letters to character list
 
@@ -510,7 +514,7 @@ def password_characters(all=True, lower_letters=False, upper_letters=False,
         special_chars (bool): add special characters to character list
 
     Returns:
-        list: List of str characters for password
+        list: List of unicode characters for password
 
     Example:
         >>> password_characters(all=False, special_chars=True)
@@ -535,6 +539,8 @@ def password_characters(all=True, lower_letters=False, upper_letters=False,
         characters += [chr(char) for char in range(58, 65)]
         characters += [chr(char) for char in range(91, 97)]
         characters += [chr(char) for char in range(123, 127)]
+
+    # TODO: Add Unicode sets
 
     return characters
 
@@ -903,10 +909,12 @@ def main(args):
         # Warn user if password is more vulnerable to brute force attacks
         if stats is not None and stats['entropy_raw'] < stats['entropy']:
             par(os.linesep, to_print=True, report=args.mem_report_file)
-            par('!' * 79 + os.linesep, to_print=True, report=args.mem_report_file)
+            par('!' * 79 + os.linesep, to_print=True,
+                report=args.mem_report_file)
             par('!' + 'WARNING'.center(77) + '!' + os.linesep,
                 to_print=True, report=args.mem_report_file)
-            par('!' * 79 + os.linesep, to_print=True, report=args.mem_report_file)
+            par('!' * 79 + os.linesep, to_print=True,
+                report=args.mem_report_file)
             par(os.linesep, to_print=True, report=args.mem_report_file)
             par('Your password is more vulnerable to brute force '
                 + os.linesep, to_print=True, report=args.mem_report_file)
@@ -1051,6 +1059,7 @@ def entry():
                            default=True,
                            action='store_true',
                            help='permit all characters in password [Default]')
+    # TODO: Add 'custom_chars' argument for use w/ UnicodeParser
     generator.add_argument('-g', '--guess_speeds',
                            default=None,
                            nargs='+',
