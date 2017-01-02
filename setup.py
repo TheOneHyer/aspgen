@@ -27,14 +27,14 @@ __author__ = 'Alex Hyer'
 __email__ = 'theonehyer@gmail.com'
 __license__ = 'GPLv3'
 __maintainer__ = 'Alex Hyer'
-__status__ = 'Stable'
-__version__ = '1.1.0'
+__status__ = 'Alpha'
+__version__ = '1.2.0a1'
 
 setup(name='aspgen',
       version='1.1.0',
       description='A Secure Password GENerator',
       classifiers=[
-          'Development Status :: 5 - Production/Stable',
+          'Development Status :: 3 - Alpha',
           'Intended Audience :: End Users/Desktop',
           'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
           'Natural Language :: English',
@@ -44,7 +44,7 @@ setup(name='aspgen',
       ],
       keywords='secure password generator',
       url='https://github.com/TheOneHyer/aspgen',
-      download_url='https://github.com/TheOneHyer/aspgen/tarball/1.1.0',
+      download_url='https://github.com/TheOneHyer/aspgen/tarball/1.2.0a1',
       author='Alex Hyer',
       author_email='theonehyer@gmail.com',
       license='GPLv3',

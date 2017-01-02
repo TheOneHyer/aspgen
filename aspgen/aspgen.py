@@ -74,8 +74,8 @@ __email__ = 'theonehyer@gmail.com'
 __license__ = 'GPLv3'
 __maintainer__ = 'Alex Hyer'
 __credits__ = 'Eli Bendersky, Generic Human'
-__status__ = 'Stable'
-__version__ = '1.1.0'
+__status__ = 'Alpha'
+__version__ = '1.2.0a1'
 
 
 # http://eli.thegreenplace.net/2010/06/25/
