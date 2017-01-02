@@ -1,4 +1,5 @@
 #! /usr/bin/env python2.7
+# -*- coding: UTF-8 -*-
 
 """A Secure Password GENerator (aspgen)
 
@@ -76,7 +77,7 @@ __license__ = 'GPLv3'
 __maintainer__ = 'Alex Hyer'
 __credits__ = 'Eli Bendersky, Generic Human'
 __status__ = 'Alpha'
-__version__ = '1.2.0a4'
+__version__ = '1.2.0a5'
 
 
 class ParseUnicode(argparse.Action):
@@ -109,9 +110,38 @@ class ParseUnicode(argparse.Action):
             values (list): actual value(s) specified by user
 
             option_string (str): argument flag used to call this function
+
+        Raises:
+            AssertionError: if unicode range start is larger than stop
         """
 
-        pass
+        chars = []
+        uniregex = re.compile('^[\dA-F]{4}$')  # Unicode hexidecimal pattern
+        unirange = re.compile('^[\dA-F]{4}-[\dA-F]{4}$')  # Unicode range
+
+        for value in values:
+
+            # Encode and append a range of Unicode characters
+            if bool(re.match(unirange, value)) is True:
+                start, stop = value.split('-')
+                istart, istop = int(start, 16), int(stop, 16)
+
+                try:
+                    assert istart > istop
+                except AssertionError:
+                    raise AssertionError('{0} is larger than {1)'
+                                         .format(start), stop)
+
+                chars.append([unichr(i) for i in xrange(istart, istop + 1)])
+
+            # Encode unicode character
+            elif bool(re.match(uniregex, value)) is True:
+                chars.append(unichr(value))
+
+            else:  # If not hexidecimal code, simply add character
+                chars.append(value)
+
+        setattr(namespace, self.dest, chars)
 
 
 # http://eli.thegreenplace.net/2010/06/25/

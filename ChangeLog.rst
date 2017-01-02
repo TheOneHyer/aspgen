@@ -4,6 +4,11 @@ Changelog
 %%version%% (unreleased)
 ------------------------
 
+- Added Skeleton Code for ParseUnicode. [TheOneHyer]
+
+  ParseUnicode class being made to extend argparse
+  to parse user Unicode input.
+
 - Updated GitChangeLog and Versioning. [TheOneHyer]
 
   Attempted fixes at GitChangeLog config and
