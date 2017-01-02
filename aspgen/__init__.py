@@ -21,9 +21,11 @@ Copyright:
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+from __future__ import unicode_literals
+
 __author__ = 'Alex Hyer'
 __email__ = 'theonehyer@gmail.com'
 __license__ = 'GPLv3'
 __maintainer__ = 'Alex Hyer'
 __status__ = 'Alpha'
-__version__ = '1.2.0a1'
+__version__ = '1.2.0a2'

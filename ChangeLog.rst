@@ -4,6 +4,12 @@ Changelog
 %%version%% (unreleased)
 ------------------------
 
+- Branched V1.2 to Add Unicode Support. [TheOneHyer]
+
+- Modified setup.py version. [TheOneHyer]
+
+- Finalized aspgen V1.1. [TheOneHyer]
+
 - Updated __init__ version. [TheOneHyer]
 
 - Small Code Redundancy Removed. [TheOneHyer]
