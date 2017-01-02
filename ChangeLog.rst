@@ -4,11 +4,19 @@ Changelog
 %%version%% (unreleased)
 ------------------------
 
+- Updated GitChangeLog and Versioning. [TheOneHyer]
+
+  Attempted fixes at GitChangeLog config and
+  updated setup.py version number.
+
 - Whole Project Now Uses Unicode Literals. [TheOneHyer]
 
 - Branched V1.2 to Add Unicode Support. [TheOneHyer]
 
 - Modified setup.py version. [TheOneHyer]
+
+1.1.0 (2016-12-20)
+------------------
 
 - Finalized aspgen V1.1. [TheOneHyer]
 
@@ -61,6 +69,9 @@ Changelog
 
   Output report is now always placed in memory and
   written at the end of aspgen.
+
+1.0.0 (2016-11-16)
+------------------
 
 - Aspgen Released. [TheOneHyer]
 
@@ -345,10 +356,16 @@ Changelog
   Will be used downstream to analyze dictionary
   passwords.
 
+0.0.3 (2016-07-17)
+------------------
+
 - Added dictionary password generator. [TheOneHyer]
 
   Added two word lists and a fully functioning
   dictionary generator to aspgen.
+
+0.0.2 (2016-06-17)
+------------------
 
 - Added basic_stats. [TheOneHyer]
 

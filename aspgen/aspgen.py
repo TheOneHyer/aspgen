@@ -76,7 +76,42 @@ __license__ = 'GPLv3'
 __maintainer__ = 'Alex Hyer'
 __credits__ = 'Eli Bendersky, Generic Human'
 __status__ = 'Alpha'
-__version__ = '1.2.0a3'
+__version__ = '1.2.0a4'
+
+
+class ParseUnicode(argparse.Action):
+    """Argparse Action to parse Unicode input
+
+    Attributes:
+        option_strings (list): list of str giving command line flags that
+                               call this action
+
+        dest (str): Namespace reference to value
+
+        nargs (bool): True if multiple arguments specified
+
+        **kwargs (various): optional arguments to pass to super call
+    """
+
+    def __init__(self, option_strings, dest, **kwargs):
+        """Initialize class and calls base class"""
+
+        super(ParseUnicode, self).__init__(option_strings, dest, **kwargs)
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        """Parse Unicode input into characters and set characters as argument
+
+        Args:
+            parser (ArgumentParser): parser used to generate values
+
+            namespace (Namespace): parse_args() generated namespace
+
+            values (list): actual value(s) specified by user
+
+            option_string (str): argument flag used to call this function
+        """
+
+        pass
 
 
 # http://eli.thegreenplace.net/2010/06/25/
