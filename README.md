@@ -310,7 +310,7 @@ log2(password combinations)
 and guess the average time in seconds required to guess a generated
 or user-provided password at a given passwords/sec guess speed. This
 calculation assumes that your password is randomly generated; a
-randomly generated password of X possible possible combinations assumes
+randomly generated password of X possible combinations assumes
 an uniform distribution. Thus, on average, guessing any single password
 requires guessing half of all possible password combinations.
 Ultimately, this means that guessing any single password requires enough
